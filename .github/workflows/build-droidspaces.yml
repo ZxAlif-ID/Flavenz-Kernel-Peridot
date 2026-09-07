@@ -98,7 +98,7 @@ jobs:
             >> kernel/scripts/Makefile.extrawarn
           rm -rf peridot-defconfig
 
-      - name: Apply Droidspaces & Container Configs (SYSVIPC, Namespaces, User NS, Devtmpfs)
+      - name: Apply Droidspaces & Container Configs
         run: |
           cd kernel
           CONFIG_FILE="arch/arm64/configs/gki_defconfig"
@@ -148,7 +148,7 @@ jobs:
           cp susfs4ksu/kernel_patches/fs/susfs.c kernel/fs/
           cp susfs4ksu/kernel_patches/include/linux/susfs*.h kernel/include/linux/
           cd kernel
-          git apply ../susfs4ksu/kernel_patches/50_add_susfs_in_kernel-6.1.patch \
+          git apply ../susfs4ksu/kernel_patches/50_add_susfs_in_gki-android14-6.1.patch \
             || echo "SUSFS patch applied with warnings or skipped"
 
       - name: Build kernel
