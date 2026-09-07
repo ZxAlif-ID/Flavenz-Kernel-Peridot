@@ -1,0 +1,223 @@
+name: Build Kernel - Peridot (Droidspaces)
+
+on:
+  workflow_dispatch:
+    inputs:
+      flavor:
+        description: "Build flavor (stock / droidspaces / full)"
+        required: true
+        default: full
+        type: choice
+        options:
+          - stock
+          - droidspaces
+          - full
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    env:
+      ARCH: arm64
+      KERNEL_COMMIT: 0c3d559bcd85
+      KERNELSU_VERSION: v3.3.0
+      SUSFS_VERSION: v2.1.0
+
+    steps:
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+            /opt/hostedtoolcache/CodeQL /usr/local/share/powershell \
+            /usr/share/swift
+          sudo docker image prune --all --force || true
+          df -h
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y --no-install-recommends \
+            bc bison flex libssl-dev libelf-dev \
+            python3 python3-pip cpio pahole \
+            lz4 zstd libzstd-dev curl git zip \
+            gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi \
+            binutils-aarch64-linux-gnu
+
+      - name: Setup Neutron Clang
+        run: |
+          set -euo pipefail
+          rm -rf "$HOME/clang"; mkdir -p "$HOME/clang"; cd "$HOME/clang"
+          curl -fsSLO "https://github.com/Neutron-Toolchains/clang-build-catalogue/releases/download/30062026/neutron-clang-30062026.tar.zst"
+          tar -I zstd -xf "neutron-clang-30062026.tar.zst" && rm -f "neutron-clang-30062026.tar.zst"
+          curl -fsSLo antman "https://raw.githubusercontent.com/Neutron-Toolchains/antman/0b32c45e3ad83a953b4bc3fd2feb4ad3cc87c1e8/antman"
+          chmod +x antman
+          for i in 1 2 3 4; do
+            ./antman --patch=glibc && break
+            [ "$i" = 4 ] && { echo "::error::antman failed 4 times"; exit 1; }
+            echo "antman attempt $i failed; retrying in $((i*20))s"; sleep $((i*20))
+          done
+          echo "$HOME/clang/bin" >> $GITHUB_PATH
+
+      - name: Clone ACK kernel source
+        run: |
+          rm -rf kernel
+          git clone --filter=blob:none --no-checkout \
+            https://android.googlesource.com/kernel/common \
+            kernel
+          cd kernel
+          git checkout $KERNEL_COMMIT
+
+      - name: Get peridot defconfig
+        run: |
+          git clone --depth=1 -b theettam-2.7 \
+            https://github.com/Mohithash/kernel_xiaomi_sm8635 \
+            peridot-defconfig
+          mkdir -p kernel/arch/arm64/configs/vendor
+          cp peridot-defconfig/arch/arm64/configs/gki_defconfig \
+            kernel/arch/arm64/configs/gki_defconfig
+          cp peridot-defconfig/arch/arm64/configs/vendor/peridot_GKI.config \
+            kernel/arch/arm64/configs/vendor/peridot_GKI.config
+          cp peridot-defconfig/scripts/Makefile.extrawarn \
+            kernel/scripts/Makefile.extrawarn
+          echo 'KBUILD_CFLAGS += $(call cc-disable-warning, uninitialized-const-pointer)' \
+            >> kernel/scripts/Makefile.extrawarn
+          rm -rf peridot-defconfig
+
+      - name: Apply ThinLTO configs
+        run: |
+          printf '%s\n' \
+            CONFIG_LTO=y \
+            CONFIG_LTO_CLANG=y \
+            CONFIG_LTO_CLANG_THIN=y \
+            CONFIG_KALLSYMS=y \
+            CONFIG_KALLSYMS_ALL=y \
+            >> kernel/arch/arm64/configs/vendor/peridot_GKI.config
+
+      - name: Apply Droidspaces configs
+        if: ${{ github.event.inputs.flavor != 'stock' }}
+        run: |
+          printf '%s\n' \
+            CONFIG_SYSVIPC=y \
+            CONFIG_PID_NS=y \
+            CONFIG_IPC_NS=y \
+            CONFIG_POSIX_MQUEUE=y \
+            CONFIG_NETFILTER_XT_MATCH_ADDRTYPE=y \
+            CONFIG_TMPFS_POSIX_ACL=y \
+            CONFIG_TMPFS_XATTR=y \
+            >> kernel/arch/arm64/configs/vendor/peridot_GKI.config
+
+      - name: Apply kABI SYSVIPC patch (GKI 6.1)
+        if: ${{ github.event.inputs.flavor != 'stock' }}
+        run: |
+          wget -q "https://raw.githubusercontent.com/ravindu644/Droidspaces-OSS/main/Documentation/resources/kernel-patches/GKI/below-kernel-6.12/001.GKI-below-6.12-fix_sysvipc_kabi_6_7_8.patch" \
+            -O sysvipc_kabi.patch
+          cd kernel
+          git apply ../sysvipc_kabi.patch
+          cd ..
+          rm sysvipc_kabi.patch
+
+      - name: Setup KernelSU Next (pershoot/dev-susfs)
+        if: ${{ github.event.inputs.flavor == 'full' }}
+        run: |
+          cd kernel
+          curl -LSs "https://raw.githubusercontent.com/pershoot/KernelSU-Next/dev-susfs/kernel/setup.sh" \
+            | bash -s $KERNELSU_VERSION
+
+      - name: Setup SUSFS
+        if: ${{ github.event.inputs.flavor == 'full' }}
+        run: |
+          git clone --depth=1 -b gki-android14-6.1 \
+            https://gitlab.com/simonpunk/susfs4ksu \
+            susfs4ksu
+          cp susfs4ksu/kernel_patches/fs/susfs.c kernel/fs/
+          cp susfs4ksu/kernel_patches/include/linux/susfs*.h kernel/include/linux/
+          cd kernel
+          git apply ../susfs4ksu/kernel_patches/50_add_susfs_in_kernel-6.1.patch \
+            || echo "SUSFS patch applied with warnings or skipped"
+
+      - name: Build kernel
+        run: |
+          export PATH="$HOME/clang/bin:$PATH"
+          CLANG_BIN=$HOME/clang/bin
+
+          MAKE_FLAGS=(
+            -j$(nproc)
+            O=out
+            ARCH=arm64
+            CC=clang
+            CLANG_TRIPLE=aarch64-linux-gnu-
+            CROSS_COMPILE=aarch64-linux-gnu-
+            LD=$CLANG_BIN/ld.lld
+            AR=$CLANG_BIN/llvm-ar
+            NM=$CLANG_BIN/llvm-nm
+            OBJCOPY=$CLANG_BIN/llvm-objcopy
+            OBJDUMP=$CLANG_BIN/llvm-objdump
+            STRIP=$CLANG_BIN/llvm-strip
+            KCFLAGS="-Wno-default-const-init-var-unsafe -march=armv9.2-a+crypto+dotprod"
+          )
+
+          cd kernel
+          make "${MAKE_FLAGS[@]}" gki_defconfig vendor/peridot_GKI.config
+          make "${MAKE_FLAGS[@]}" Image Image.gz dtbs
+
+      - name: Package AnyKernel3
+        env:
+          FLAVOR: ${{ github.event.inputs.flavor }}
+        run: |
+          DATE=$(date +%Y%m%d)
+          if [ "${FLAVOR}" = "full" ]; then
+            ZIPNAME="Peridot-Kernel-KSUNext-${KERNELSU_VERSION}-SUSFS-${SUSFS_VERSION}-droidspaces-${DATE}.zip"
+          else
+            ZIPNAME="Peridot-Kernel-${FLAVOR}-${DATE}.zip"
+          fi
+          echo "ZIPNAME=${ZIPNAME}" >> $GITHUB_ENV
+          echo "ZIPPATH=${GITHUB_WORKSPACE}/${ZIPNAME}" >> $GITHUB_ENV
+
+          rm -rf anykernel
+          git clone --depth=1 https://github.com/osm0sis/AnyKernel3 anykernel
+          cd anykernel
+
+          rm -rf ramdisk patch modules README.md LICENSE
+
+          cat << 'EOF' > anykernel.sh
+          # AnyKernel3 Ramdisk Mod Script
+          # osm0sis @ xda-developers
+
+          ## AnyKernel setup
+          # properties() { '
+          # kernel.string=Flavenz Kernel (Peridot) by ZxAlif-ID
+          # do.devicecheck=1
+          # do.modules=0
+          # do.systemless=1
+          # do.cleanup=1
+          # do.cleanuponabort=0
+          # device.name1=peridot
+          # device.name2=peridot_global
+          # '; } # end properties
+
+          ## AnyKernel methods
+          # import functions/variables
+          . tools/ak3-core.sh
+
+          ## AnyKernel file attributes
+          # boot install
+          dump_boot;
+
+          # write kernel
+          print "Flashing Flavenz Kernel...";
+          write_boot;
+          EOF
+
+          cp ${GITHUB_WORKSPACE}/kernel/out/arch/arm64/boot/Image.gz .
+
+          zip -r9 ${ZIPPATH} * -x ".git*" README.md LICENSE > /dev/null
+          echo "Successfully created ${ZIPNAME}"
+
+      - name: Upload Kernel Release Zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: Peridot-Kernel-${{ github.event.inputs.flavor }}-${{ env.RELEASEDATE || 'release' }}
+          path: Peridot-Kernel-*.zip
