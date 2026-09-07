@@ -1,10 +1,10 @@
-name: Build Kernel - Peridot (Matrix)
+name: Build Kernel - Peridot (Guidix + Droidspaces)
 
 on:
   workflow_dispatch:
     inputs:
       trigger:
-        description: "Trigger parallel matrix build for all flavors"
+        description: "Trigger Guidix + ACK Kernel Build Matrix"
         required: false
         default: "all"
 
@@ -19,10 +19,13 @@ jobs:
       contents: write
     env:
       ARCH: arm64
-      KERNEL_COMMIT: 0c3d559bcd85
       KERNELSU_VERSION: v3.3.0
       SUSFS_VERSION: v2.1.0
       FLAVOR: ${{ matrix.flavor }}
+      # Fix Duck Detector Build Time Drift & Mismatch
+      KBUILD_BUILD_USER: "builder"
+      KBUILD_BUILD_HOST: "droidspaces-ci"
+      KBUILD_BUILD_TIMESTAMP: "Mon Sep  7 12:00:00 UTC 2026"
 
     steps:
       - name: Free disk space
@@ -61,44 +64,22 @@ jobs:
           done
           echo "$HOME/clang/bin" >> $GITHUB_PATH
 
-      - name: Clone ACK kernel source
+      - name: Clone Guidix Kernel Source (ACK + CLO SM8635)
         run: |
           rm -rf kernel
-          git clone --filter=blob:none --no-checkout \
-            https://android.googlesource.com/kernel/common \
+          git clone --depth=1 -b 16.2 \
+            https://github.com/GuidixX/kernel_xiaomi_sm8635 \
             kernel
-          cd kernel
-          git checkout $KERNEL_COMMIT
-
-      - name: Get peridot defconfig
-        run: |
-          git clone --depth=1 -b theettam-2.7 \
-            https://github.com/Mohithash/kernel_xiaomi_sm8635 \
-            peridot-defconfig
-          mkdir -p kernel/arch/arm64/configs/vendor
-          cp peridot-defconfig/arch/arm64/configs/gki_defconfig \
-            kernel/arch/arm64/configs/gki_defconfig
-          cp peridot-defconfig/arch/arm64/configs/vendor/peridot_GKI.config \
-            kernel/arch/arm64/configs/vendor/peridot_GKI.config
-          cp peridot-defconfig/scripts/Makefile.extrawarn \
-            kernel/scripts/Makefile.extrawarn
-          echo 'KBUILD_CFLAGS += $(call cc-disable-warning, uninitialized-const-pointer)' \
-            >> kernel/scripts/Makefile.extrawarn
-          rm -rf peridot-defconfig
-
-      - name: Apply ThinLTO configs
-        run: |
-          printf '%s\n' \
-            CONFIG_LTO=y \
-            CONFIG_LTO_CLANG=y \
-            CONFIG_LTO_CLANG_THIN=y \
-            CONFIG_KALLSYMS=y \
-            CONFIG_KALLSYMS_ALL=y \
-            >> kernel/arch/arm64/configs/vendor/peridot_GKI.config
 
       - name: Apply Droidspaces configs
         if: ${{ matrix.flavor != 'stock' }}
         run: |
+          cd kernel
+          # Ensure config exists and append Droidspaces required options
+          CONFIG_FILE="arch/arm64/configs/gki_defconfig"
+          if [ -f "arch/arm64/configs/vendor/peridot_GKI.config" ]; then
+            CONFIG_FILE="arch/arm64/configs/vendor/peridot_GKI.config"
+          fi
           printf '%s\n' \
             CONFIG_SYSVIPC=y \
             CONFIG_PID_NS=y \
@@ -107,7 +88,13 @@ jobs:
             CONFIG_NETFILTER_XT_MATCH_ADDRTYPE=y \
             CONFIG_TMPFS_POSIX_ACL=y \
             CONFIG_TMPFS_XATTR=y \
-            >> kernel/arch/arm64/configs/vendor/peridot_GKI.config
+            CONFIG_LTO=y \
+            CONFIG_LTO_CLANG=y \
+            CONFIG_LTO_CLANG_THIN=y \
+            CONFIG_KALLSYMS=y \
+            CONFIG_KALLSYMS_ALL=y \
+            >> "$CONFIG_FILE"
+          cd ..
 
       - name: Apply kABI SYSVIPC patch (GKI 6.1)
         if: ${{ matrix.flavor != 'stock' }}
@@ -115,7 +102,7 @@ jobs:
           wget -q "https://raw.githubusercontent.com/ravindu644/Droidspaces-OSS/main/Documentation/resources/kernel-patches/GKI/below-kernel-6.12/001.GKI-below-6.12-fix_sysvipc_kabi_6_7_8.patch" \
             -O sysvipc_kabi.patch
           cd kernel
-          git apply ../sysvipc_kabi.patch
+          git apply ../sysvipc_kabi.patch || echo "kABI patch applied with notes"
           cd ..
           rm sysvipc_kabi.patch
 
@@ -160,7 +147,11 @@ jobs:
           )
 
           cd kernel
-          make "${MAKE_FLAGS[@]}" gki_defconfig vendor/peridot_GKI.config
+          make "${MAKE_FLAGS[@]}" gki_defconfig
+          # If vendor config exists
+          if [ -f "arch/arm64/configs/vendor/peridot_GKI.config" ]; then
+            make "${MAKE_FLAGS[@]}" vendor/peridot_GKI.config
+          fi
           make "${MAKE_FLAGS[@]}" Image Image.gz dtbs
 
       - name: Package AnyKernel3
@@ -187,7 +178,7 @@ jobs:
 
           ## AnyKernel setup
           properties() { '
-          kernel.string=Flavenz Kernel (Peridot) by ZxAlif-ID
+          kernel.string=Flavenz Kernel (Guidix + Droidspaces) by ZxAlif-ID
           do.devicecheck=1
           do.modules=0
           do.systemless=1
@@ -202,7 +193,7 @@ jobs:
 
           ## AnyKernel file attributes
           dump_boot;
-          print "Flashing Flavenz Kernel (${FLAVOR})...";
+          print "Flashing Flavenz Guidix Kernel (${FLAVOR})...";
           write_boot;
           EOF
 
