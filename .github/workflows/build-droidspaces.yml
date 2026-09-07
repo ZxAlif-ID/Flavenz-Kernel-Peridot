@@ -1,21 +1,20 @@
-name: Build Kernel - Peridot (Droidspaces)
+name: Build Kernel - Peridot (Matrix)
 
 on:
   workflow_dispatch:
     inputs:
-      flavor:
-        description: "Build flavor (stock / droidspaces / full)"
-        required: true
-        default: full
-        type: choice
-        options:
-          - stock
-          - droidspaces
-          - full
+      trigger:
+        description: "Trigger parallel matrix build for all flavors"
+        required: false
+        default: "all"
 
 jobs:
   build:
     runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        flavor: [stock, droidspaces, full]
     permissions:
       contents: write
     env:
@@ -23,6 +22,7 @@ jobs:
       KERNEL_COMMIT: 0c3d559bcd85
       KERNELSU_VERSION: v3.3.0
       SUSFS_VERSION: v2.1.0
+      FLAVOR: ${{ matrix.flavor }}
 
     steps:
       - name: Free disk space
@@ -97,7 +97,7 @@ jobs:
             >> kernel/arch/arm64/configs/vendor/peridot_GKI.config
 
       - name: Apply Droidspaces configs
-        if: ${{ github.event.inputs.flavor != 'stock' }}
+        if: ${{ matrix.flavor != 'stock' }}
         run: |
           printf '%s\n' \
             CONFIG_SYSVIPC=y \
@@ -110,7 +110,7 @@ jobs:
             >> kernel/arch/arm64/configs/vendor/peridot_GKI.config
 
       - name: Apply kABI SYSVIPC patch (GKI 6.1)
-        if: ${{ github.event.inputs.flavor != 'stock' }}
+        if: ${{ matrix.flavor != 'stock' }}
         run: |
           wget -q "https://raw.githubusercontent.com/ravindu644/Droidspaces-OSS/main/Documentation/resources/kernel-patches/GKI/below-kernel-6.12/001.GKI-below-6.12-fix_sysvipc_kabi_6_7_8.patch" \
             -O sysvipc_kabi.patch
@@ -120,14 +120,14 @@ jobs:
           rm sysvipc_kabi.patch
 
       - name: Setup KernelSU Next (pershoot/dev-susfs)
-        if: ${{ github.event.inputs.flavor == 'full' }}
+        if: ${{ matrix.flavor == 'full' }}
         run: |
           cd kernel
           curl -LSs "https://raw.githubusercontent.com/pershoot/KernelSU-Next/dev-susfs/kernel/setup.sh" \
             | bash -s $KERNELSU_VERSION
 
       - name: Setup SUSFS
-        if: ${{ github.event.inputs.flavor == 'full' }}
+        if: ${{ matrix.flavor == 'full' }}
         run: |
           git clone --depth=1 -b gki-android14-6.1 \
             https://gitlab.com/simonpunk/susfs4ksu \
@@ -164,8 +164,6 @@ jobs:
           make "${MAKE_FLAGS[@]}" Image Image.gz dtbs
 
       - name: Package AnyKernel3
-        env:
-          FLAVOR: ${{ github.event.inputs.flavor }}
         run: |
           DATE=$(date +%Y%m%d)
           if [ "${FLAVOR}" = "full" ]; then
@@ -175,6 +173,7 @@ jobs:
           fi
           echo "ZIPNAME=${ZIPNAME}" >> $GITHUB_ENV
           echo "ZIPPATH=${GITHUB_WORKSPACE}/${ZIPNAME}" >> $GITHUB_ENV
+          echo "RELEASEDATE=${DATE}" >> $GITHUB_ENV
 
           rm -rf anykernel
           git clone --depth=1 https://github.com/osm0sis/AnyKernel3 anykernel
@@ -187,27 +186,23 @@ jobs:
           # osm0sis @ xda-developers
 
           ## AnyKernel setup
-          # properties() { '
-          # kernel.string=Flavenz Kernel (Peridot) by ZxAlif-ID
-          # do.devicecheck=1
-          # do.modules=0
-          # do.systemless=1
-          # do.cleanup=1
-          # do.cleanuponabort=0
-          # device.name1=peridot
-          # device.name2=peridot_global
-          # '; } # end properties
+          properties() { '
+          kernel.string=Flavenz Kernel (Peridot) by ZxAlif-ID
+          do.devicecheck=1
+          do.modules=0
+          do.systemless=1
+          do.cleanup=1
+          do.cleanuponabort=0
+          device.name1=peridot
+          device.name2=peridot_global
+          '; } # end properties
 
           ## AnyKernel methods
-          # import functions/variables
           . tools/ak3-core.sh
 
           ## AnyKernel file attributes
-          # boot install
           dump_boot;
-
-          # write kernel
-          print "Flashing Flavenz Kernel...";
+          print "Flashing Flavenz Kernel (${FLAVOR})...";
           write_boot;
           EOF
 
@@ -216,8 +211,8 @@ jobs:
           zip -r9 ${ZIPPATH} * -x ".git*" README.md LICENSE > /dev/null
           echo "Successfully created ${ZIPNAME}"
 
-      - name: Upload Kernel Release Zip
+      - name: Upload Kernel Release Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: Peridot-Kernel-${{ github.event.inputs.flavor }}-${{ env.RELEASEDATE || 'release' }}
+          name: Peridot-Kernel-${{ matrix.flavor }}-${{ env.RELEASEDATE || 'release' }}
           path: Peridot-Kernel-*.zip
