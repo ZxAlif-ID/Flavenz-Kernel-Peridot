@@ -84,7 +84,7 @@ jobs:
           git checkout $KERNEL_COMMIT
           cd ..
 
-          git clone --depth=1 -b theettam-2.8 \
+          git clone --depth=1 -b 17 \
             https://github.com/Mohithash/kernel_xiaomi_sm8635 \
             peridot-defconfig
           mkdir -p kernel/arch/arm64/configs/vendor
