@@ -1,10 +1,10 @@
-name: Build Kernel - Peridot (Guidix Matrix)
+name: Build Kernel - Peridot (Guidix vs ACK Matrix)
 
 on:
   workflow_dispatch:
     inputs:
       trigger:
-        description: "Trigger Guidix + ACK Kernel Build Matrix"
+        description: "Trigger Guidix vs ACK Kernel Build Matrix"
         required: false
         default: "all"
 
@@ -14,11 +14,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        flavor: [stock, droidspaces, full]
+        flavor: [guidix-full, ack-full]
     permissions:
       contents: write
     env:
       ARCH: arm64
+      KERNEL_COMMIT: 0c3d559bcd85
       KERNELSU_VERSION: v3.3.0
       SUSFS_VERSION: v2.1.0
       FLAVOR: ${{ matrix.flavor }}
@@ -64,15 +65,40 @@ jobs:
           done
           echo "$HOME/clang/bin" >> $GITHUB_PATH
 
-      - name: Clone Guidix Kernel Source (ACK + CLO SM8635)
+      - name: Clone Guidix Source
+        if: ${{ matrix.flavor == 'guidix-full' }}
         run: |
           rm -rf kernel
           git clone --depth=1 -b 16.2 \
             https://github.com/GuidixX/kernel_xiaomi_sm8635 \
             kernel
 
-      - name: Apply Droidspaces configs
-        if: ${{ matrix.flavor != 'stock' }}
+      - name: Clone Pure ACK Source + Defconfig
+        if: ${{ matrix.flavor == 'ack-full' }}
+        run: |
+          rm -rf kernel
+          git clone --filter=blob:none --no-checkout \
+            https://android.googlesource.com/kernel/common \
+            kernel
+          cd kernel
+          git checkout $KERNEL_COMMIT
+          cd ..
+
+          git clone --depth=1 -b theettam-2.7 \
+            https://github.com/Mohithash/kernel_xiaomi_sm8635 \
+            peridot-defconfig
+          mkdir -p kernel/arch/arm64/configs/vendor
+          cp peridot-defconfig/arch/arm64/configs/gki_defconfig \
+            kernel/arch/arm64/configs/gki_defconfig
+          cp peridot-defconfig/arch/arm64/configs/vendor/peridot_GKI.config \
+            kernel/arch/arm64/configs/vendor/peridot_GKI.config
+          cp peridot-defconfig/scripts/Makefile.extrawarn \
+            kernel/scripts/Makefile.extrawarn
+          echo 'KBUILD_CFLAGS += $(call cc-disable-warning, uninitialized-const-pointer)' \
+            >> kernel/scripts/Makefile.extrawarn
+          rm -rf peridot-defconfig
+
+      - name: Apply Droidspaces & Performance configs
         run: |
           cd kernel
           CONFIG_FILE="arch/arm64/configs/gki_defconfig"
@@ -96,7 +122,6 @@ jobs:
           cd ..
 
       - name: Apply kABI SYSVIPC patch (GKI 6.1)
-        if: ${{ matrix.flavor != 'stock' }}
         run: |
           wget -q "https://raw.githubusercontent.com/ravindu644/Droidspaces-OSS/main/Documentation/resources/kernel-patches/GKI/below-kernel-6.12/001.GKI-below-6.12-fix_sysvipc_kabi_6_7_8.patch" \
             -O sysvipc_kabi.patch
@@ -106,14 +131,12 @@ jobs:
           rm sysvipc_kabi.patch
 
       - name: Setup KernelSU Next (pershoot/dev-susfs)
-        if: ${{ matrix.flavor == 'full' }}
         run: |
           cd kernel
           curl -LSs "https://raw.githubusercontent.com/pershoot/KernelSU-Next/dev-susfs/kernel/setup.sh" \
             | bash -s $KERNELSU_VERSION
 
       - name: Setup SUSFS
-        if: ${{ matrix.flavor == 'full' }}
         run: |
           git clone --depth=1 -b gki-android14-6.1 \
             https://gitlab.com/simonpunk/susfs4ksu \
@@ -155,14 +178,15 @@ jobs:
       - name: Package AnyKernel3
         run: |
           DATE=$(date +%Y%m%d)
-          if [ "${FLAVOR}" = "full" ]; then
-            ZIPNAME="Peridot-Kernel-KSUNext-${KERNELSU_VERSION}-SUSFS-${SUSFS_VERSION}-droidspaces-${DATE}.zip"
-          else
-            ZIPNAME="Peridot-Kernel-${FLAVOR}-${DATE}.zip"
+          ZIPNAME="Peridot-Kernel-${MATRIX_FLAVOR_NAME:-${FLAVOR}}-KSUNext-${KERNELSU_VERSION}-SUSFS-${SUSFS_VERSION}-droidspaces-${DATE}.zip"
+          if [ "${FLAVOR}" = "guidix-full" ]; then
+            ZIPNAME="Peridot-Kernel-Guidix-KSUNext-${KERNELSU_VERSION}-SUSFS-${SUSFS_VERSION}-droidspaces-${DATE}.zip"
+          elif [ "${FLAVOR}" = "ack-full" ]; then
+            ZIPNAME="Peridot-Kernel-ACK-KSUNext-${KERNELSU_VERSION}-SUSFS-${SUSFS_VERSION}-droidspaces-${DATE}.zip"
           fi
+
           echo "ZIPNAME=${ZIPNAME}" >> $GITHUB_ENV
           echo "ZIPPATH=${GITHUB_WORKSPACE}/${ZIPNAME}" >> $GITHUB_ENV
-          echo "RELEASEDATE=${DATE}" >> $GITHUB_ENV
 
           rm -rf anykernel
           git clone --depth=1 https://github.com/osm0sis/AnyKernel3 anykernel
@@ -176,7 +200,7 @@ jobs:
 
           ## AnyKernel setup
           properties() { '
-          kernel.string=Flavenz Kernel (Guidix ACK + ${FLAVOR}) by ZxAlif-ID
+          kernel.string=Flavenz Kernel (${FLAVOR}) by ZxAlif-ID
           do.devicecheck=1
           do.modules=0
           do.systemless=1
@@ -191,7 +215,7 @@ jobs:
 
           ## AnyKernel file attributes
           dump_boot;
-          print "Flashing Flavenz Guidix Kernel (${FLAVOR})...";
+          print "Flashing Flavenz Kernel (${FLAVOR})...";
           write_boot;
           EOF
 
@@ -203,5 +227,5 @@ jobs:
       - name: Upload Kernel Release Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: Peridot-Kernel-${{ matrix.flavor }}-${{ env.RELEASEDATE || 'release' }}
+          name: Peridot-Kernel-${{ matrix.flavor }}-KSUNext-${{ env.RELEASEDATE || 'release' }}
           path: Peridot-Kernel-*.zip
