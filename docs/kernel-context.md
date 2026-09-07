@@ -36,7 +36,7 @@ Berdasarkan riset mendalam + konfirmasi Gemini AI + dokumentasi Android resmi:
 - `MiCode/Xiaomi_Kernel_OpenSource` branch `peridot-u-oss` — source resmi Xiaomi
 - `Peridot-Development/kernel_xiaomi_peridot` branch `peridot-u-oss` — mirror MiCode aktif
 - `GuidixX/kernel_xiaomi_sm8635` branch `16.2` — ACK + CLO, proven
-- `Mohithash/kernel_xiaomi_sm8635` branch `theettam-2.7` — ACK + CLO + BORE/ADIOS (ada tweak)
+- `Mohithash/kernel_xiaomi_sm8635` branch `theettam-2.8` — ACK + CLO + BORE/ADIOS (ada tweak)
 
 ### Kenapa tidak bisa pakai stock kernel + Droidspaces:
 Droidspaces butuh namespace configs yang TIDAK ada di stock kernel Xiaomi. Harus build kernel baru — tidak ada jalan pintas.
@@ -76,12 +76,12 @@ CONFIG_TMPFS_XATTR=y
 
 ## Repo Fork
 - **Fork**: `https://github.com/ZxAlif-ID/Kernel_F6`
-- **Branch aktif**: `theettam-2.7`
+- **Branch aktif**: `theettam-2.8`
 - **Workflow file**: `.github/workflows/build-droidspaces.yml` ✓ sudah di-commit
 
 ## Sumber kernel source (saat ini — ACK base)
 - **Base**: ACK `android14-6.1-lts` commit `0c3d559bcd85`
-- **Defconfig + config + Makefile.extrawarn**: dari `Mohithash/kernel_xiaomi_sm8635` branch `theettam-2.7`
+- **Defconfig + config + Makefile.extrawarn**: dari `Mohithash/kernel_xiaomi_sm8635` branch `theettam-2.8`
   - `arch/arm64/configs/gki_defconfig`
   - `arch/arm64/configs/vendor/peridot_GKI.config`
   - `scripts/Makefile.extrawarn` ← fix Clang 23 warnings (tambah 1 baris manual untuk `uninitialized-const-pointer`)
@@ -252,7 +252,7 @@ jobs:
 
       - name: Get peridot defconfig
         run: |
-          git clone --depth=1 -b theettam-2.7 \
+          git clone --depth=1 -b theettam-2.8 \
             https://github.com/Mohithash/kernel_xiaomi_sm8635 \
             peridot-defconfig
           mkdir -p kernel/arch/arm64/configs/vendor
