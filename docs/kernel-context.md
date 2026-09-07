@@ -144,7 +144,7 @@ releases/
 - Fix ZIPNAME per flavor (full vs non-full)
 - Fix Push to releases: subfolder `${RELEASEDATE}/` bukan flat `releases/`
 - Hapus step `Upload AnyKernel3 zip` (artifact upload tidak diperlukan)
-- **Next step jika masih error**: pertimbangkan ganti base ke GuidixX 16.2
+- Workflow kini menggunakan **Dynamic Branch Fallback** (`17` → `main` → `theettam-2.8` → `theettam-2.7`) saat cloning defconfig, sehingga tahan terhadap perubahan branch upstream atau penghapusan branch lama.
 
 ## Next Decision Point
 Jika build ACK masih error atau hasil kurang memuaskan:
