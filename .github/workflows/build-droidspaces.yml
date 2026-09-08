@@ -202,14 +202,24 @@ jobs:
 
           echo "ZIPNAME=${ZIPNAME}" >> $GITHUB_ENV
           echo "ZIPPATH=${GITHUB_WORKSPACE}/${ZIPNAME}" >> $GITHUB_ENV
+          echo "RELEASEDATE=${DATE}" >> $GITHUB_ENV
 
-          rm -rf anykernel
-          git clone --depth=1 https://github.com/osm0sis/AnyKernel3 anykernel
+          # Ambil AnyKernel3 dari fork sendiri (ZxAlif-ID/Kernel_F6, branch main).
+          # Clone osm0sis/AnyKernel3 selalu gagal "exit code 3" di runner.
+          rm -rf anykernel anykernel-src
+          git clone --depth=1 --filter=blob:none --sparse -b main \
+            https://github.com/ZxAlif-ID/Kernel_F6 anykernel-src
+          cd anykernel-src
+          git sparse-checkout set anykernel
+          cp -r anykernel ../anykernel
+          cd ..
+          rm -rf anykernel-src
+
           cd anykernel
 
-          rm -rf ramdisk patch modules README.md LICENSE
+          rm -rf ramdisk patch modules README.md LICENSE LICENSE.txt
 
-          cat << 'EOF' > anykernel.sh
+          cat << EOF > anykernel.sh
           # AnyKernel3 Ramdisk Mod Script
           # osm0sis @ xda-developers
 
@@ -230,7 +240,7 @@ jobs:
 
           ## AnyKernel file attributes
           dump_boot;
-          print "Flashing Flavenz Kernel (${FLAVOR})...";
+          ui_print "Flashing Flavenz Kernel (${FLAVOR})...";
           write_boot;
           EOF
 
