@@ -2,12 +2,12 @@
 
 <div align="center">
 
-![Kernel Version](https://kernel.org)
-![Android](https://android.com)
-![Device](https://www.gsmarena.com/xiaomi_poco_f6-12940.svg)
-![KSUNext](https://github.com/KernelSU/KernelSU)
-![SUSFS](https://github.com/simonpunk/susfs4ksu)
-![License](LICENSE)
+[![Kernel Version](https://img.shields.io/badge/Kernel-6.1.138-blue.svg)](https://kernel.org)
+[![Android](https://img.shields.io/badge/Android-14%2F15%2F16-green.svg)](https://android.com)
+[![Device](https://img.shields.io/badge/Device-Xiaomi%20POCO%20F6%20%2F%20Redmi%20Turbo%203-orange.svg)](https://www.gsmarena.com/xiaomi_poco_f6-12940.svg)
+[![KSUNext](https://img.shields.io/badge/KSUNext-v3.3.0-purple.svg)](https://github.com/KernelSU/KernelSU)
+[![SUSFS](https://img.shields.io/badge/SUSFS-v2.1.0-red.svg)](https://github.com/simonpunk/susfs4ksu)
+[![License](https://img.shields.io/badge/License-GPLv2-yellow.svg)](LICENSE)
 
 *High-Performance, Clean GKI Custom Kernel engineered for Maximum Gaming Stability, KernelSU Next, SUSFS Root Concealment, and Native Droidspaces Container Support.*
 
