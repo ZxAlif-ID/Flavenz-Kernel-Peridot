@@ -92,16 +92,11 @@ CONFIG_KALLSYMS=y / CONFIG_KALLSYMS_ALL=y
 - Deterministic build: `KBUILD_BUILD_USER/HOST/TIMESTAMP` di-pin
 
 ### Package AnyKernel3 — sumber AK3
-- AnyKernel3 **tidak di-clone dari `osm0sis/AnyKernel3`** (clone-nya selalu gagal `exit code 3` di runner — lihat error log)
-- Sumber: **fork pribadi** `ZxAlif-ID/Kernel_F6` branch `main`, hanya folder `anykernel/` yang diambil via sparse checkout:
-  ```bash
-  git clone --depth=1 --filter=blob:none --sparse -b main \
-    https://github.com/ZxAlif-ID/Kernel_F6 anykernel-src
-  git sparse-checkout set anykernel
-  cp -r anykernel ../anykernel
-  ```
-- `anykernel.sh` digenerate sendiri oleh workflow (branding Flavenz, `do.devicecheck=1`, `device.name1=peridot`, pakai `dump_boot`/`write_boot` + `ui_print`)
-- Isi zip: `anykernel.sh`, `Image.gz`, `META-INF/` (update-binary, updater-script), `tools/` (ak3-core.sh, magiskboot, busybox, dll)
+- AnyKernel3 **tidak di-clone sama sekali saat build** — clone dari repo mana pun (`osm0sis/AnyKernel3`, fork sendiri) terbukti mati diam-diam `exit code 3` di runner (lihat error log)
+- **Sekarang di-vendor ke repo** (`0af93dc`): folder `anykernel/` di root repo ini (sumber awal: `ZxAlif-ID/Kernel_F6@main`, sudah di-rewrite ke Flavenz). Workflow tinggal memakainya saat packaging
+- `anykernel.sh` digenerate sendiri oleh workflow via `printf` (branding Flavenz, `do.devicecheck=1`, `device.name1=peridot`, header peridot proven: `block=/dev/block/by-name/boot`, `is_slot_device=1`, `split_boot; flash_boot;`, pakai `dump_boot`/`write_boot` + `ui_print`, `ramdisk_compression=auto`)
+- Isi zip: `anykernel.sh`, `Image` (+ `Image.gz`), `META-INF/` (update-binary, updater-script), `tools/` (ak3-core.sh, magiskboot, busybox, dll)
+- Verifikasi: run 34256171472 — kedua job hijau, 2 artifact @ 17.2 MB
 
 ## Output ZIP (artifact per flavor)
 ```
@@ -147,6 +142,9 @@ Peridot-Kernel-ACK-KSUNext-v3.3.0-SUSFS-v2.1.0-droidspaces-YYYYMMDD.zip       (a
 | `anykernel.sh` berisi `${FLAVOR}` literal | Heredoc `<< 'EOF'` → `<< EOF` agar `${FLAVOR}` ter-expand saat generate |
 | `print` tidak ada di ak3-core.sh | Ganti `print "..."` → `ui_print "..."` (hanya `ui_print` yang didefinisikan) |
 | Artifact name selalu "release" | Set `RELEASEDATE=${DATE}` di step Package supaya nama artifact memuat tanggal |
+| **Package AnyKernel3 gagal `exit code 3` meski sumber diganti fork sendiri** | **Akar masalah: clone git DI RUNNER mati diam-diam (tanpa pesan git) untuk repo mana pun saat step packaging** (osm0sis run #4/#5, fork `ZxAlif-ID/Kernel_F6` run #6) — padahal clone sama sukses di lokal → disimpulkan masalah runner, bukan repo. **Fix `0af93dc`**: vendor AnyKernel3 ke repo (folder `anykernel/`), tidak ada clone sama sekali saat packaging; `anykernel.sh` digenerate via `printf` dengan header peridot proven (`block=/dev/block/by-name/boot`, `is_slot_device=1`, `split_boot; flash_boot;`), package `Image` (bukan Image.gz), `ramdisk_compression=auto` |
+| Step packaging "sukses" tapi 0 artifact | `ZIPPATH` ditulis via `GITHUB_ENV` — variabel itu HANYA terlihat di step BERIKUTNYA, jadi di step yang sama nilainya kosong → `zip -r9 "" ...` exit 0 tapi menulis file tersembunyi `.zip`. **Fix `e1d2a62`**: variabel shell biasa + guard `[ -s ]` sebelum upload + `if-no-files-found: error` |
+| ack-full gagal di clone ACK: `fetch-pack: unexpected disconnect / early EOF` exit 128 | Clone megarepo `android.googlesource.com/kernel/common` sering putus di tengah transfer di runner (~4-5 menit). **Fix `6478ccd`**: retry 3 attempt + backoff eksponensial + `http.lowSpeedLimit`/`http.lowSpeedTime` agar clone macet gagal cepat |
 
 ## Catatan Fork (ZxAlif-ID/Kernel_F6)
 - Fork dari `Mohithash/kernel_xiaomi_sm8635`

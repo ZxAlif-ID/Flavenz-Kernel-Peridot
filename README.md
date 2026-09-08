@@ -48,12 +48,14 @@ Flavenz-Kernel-Peridot/
 ├── .github/
 │   └── workflows/
 │       └── build-droidspaces.yml     # Build matrix: guidix-full vs ack-full (workflow_dispatch)
+├── anykernel/                        # Vendored AnyKernel3 tree (used for manual flashing; workflow regenerates anykernel.sh per-flavor at package time)
 ├── docs/
 │   └── kernel-context.md             # Technical documentation, research notes & error log
+├── LICENSE                           # GNU GPLv2
 └── README.md
 ```
 
-> Kernel sources, AnyKernel3 packaging files and build toolchains are **not** stored in this repo — everything is fetched by the workflow at build time (kernel sources, AnyKernel3 from the maintainer's fork `ZxAlif-ID/Kernel_F6`, Neutron Clang, KernelSU Next, SUSFS).
+> Kernel sources and build toolchains are **not** stored in this repo — they are fetched by the workflow at build time (kernel sources per flavor, Neutron Clang, KernelSU Next, SUSFS). AnyKernel3 is vendored in `anykernel/`.
 
 ---
 
@@ -89,9 +91,21 @@ This repository includes a fully automated GitHub Actions workflow (`.github/wor
 
 - Triggered manually via **workflow_dispatch** (Actions → Run workflow).
 - Matrix of **2 parallel jobs**: `guidix-full` and `ack-full`.
-- Steps: free disk space → install dependencies → setup Neutron Clang (with antman glibc patch) → clone kernel source per flavor → apply Droidspaces + ThinLTO configs → apply SYSVIPC kABI patch → setup KernelSU Next v3.3.0 → setup SUSFS v2.1.0 → build (`Image`, `Image.gz`, `dtbs`) → package AnyKernel3 ZIP → upload artifact.
+- Steps: free disk space → install dependencies → setup Neutron Clang (with antman glibc patch) → clone kernel source per flavor → apply Droidspaces + ThinLTO configs → apply SYSVIPC kABI patch → setup KernelSU Next v3.3.0 → setup SUSFS v2.1.0 → build (`Image`, `Image.gz`, `dtbs`) → package AnyKernel3 ZIP (vendored `anykernel/` tree + generated `anykernel.sh`) → upload artifact.
 
 See `docs/kernel-context.md` for the full technical breakdown and the error-fix log.
+
+---
+
+## ⚠️ Disclaimer
+
+> [!IMPORTANT]
+> **This is a personal, non-commercial project.** It is provided **AS-IS**, with **no warranty of any kind**, express or implied.
+>
+> - **You are fully responsible for anything you do with these kernels.** Any mistakes, errors, malfunctions, data loss, or **damage to your device/system** (bootloop, hard brick, security incident, etc.) are **entirely at your own risk and responsibility**.
+> - **Security cannot be guaranteed.** The kernels have not been formally audited or verified as secure. Flash at your own discretion.
+> - Always take a full backup (boot, init_boot, and your data) before flashing anything.
+> - By downloading and flashing any of the artifacts or releases from this repository, you acknowledge and accept full responsibility for the outcome.
 
 ---
 
