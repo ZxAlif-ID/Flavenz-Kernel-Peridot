@@ -317,17 +317,25 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
-          # v4 artifacts bisa memuat zip pembungkus per job — ekstrak dulu semua
-          # pembungkus agar tersisa HANYA zip flashable AnyKernel3 di root.
+          # v4 + merge-multiple sudah mengekstrak isi artifact langsung ke artifacts/
+          # (zip flashable siap di root). Deteksi wrapper TIDAK boleh pakai
+          # `unzip -l | grep '\.zip$'` — baris pertama output unzip -l adalah
+          # "Archive: <path>.zip" sehingga SEMUA zip match dan flashable ikut
+          # terhapus (bug run 34279539210: found 0). Deteksi benar: zip AK3
+          # selalu berisi anykernel.sh; zip yang TIDAK berisi anykernel.sh dianggap
+          # pembungkus dan dibuka.
           shopt -s nullglob
           for f in artifacts/*.zip; do
-            if unzip -l "$f" | grep -q '\.zip$'; then
-              d="${f%.zip}__unwrapped"; mkdir -p "$d"
-              unzip -qo "$f" -d "$d"
-              rm -f "$f"
-              find "$d" -name '*.zip' -exec mv {} artifacts/ \;
-              rm -rf "$d"
+            if unzip -l "$f" | grep -q 'anykernel.sh'; then
+              echo "flashable (keep): $f"
+              continue
             fi
+            echo "unwrapping wrapper zip: $f"
+            d="${f%.zip}__unwrapped"; mkdir -p "$d"
+            unzip -qo "$f" -d "$d"
+            rm -f "$f"
+            find "$d" -name '*.zip' -exec mv {} artifacts/ \;
+            rm -rf "$d"
           done
           shopt -u nullglob
           echo "=== zip flashable di artifacts/ ==="
