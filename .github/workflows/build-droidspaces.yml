@@ -204,49 +204,49 @@ jobs:
           echo "ZIPPATH=${GITHUB_WORKSPACE}/${ZIPNAME}" >> $GITHUB_ENV
           echo "RELEASEDATE=${DATE}" >> $GITHUB_ENV
 
-          # Ambil AnyKernel3 dari fork sendiri (ZxAlif-ID/Kernel_F6, branch main).
-          # Clone osm0sis/AnyKernel3 selalu gagal "exit code 3" di runner.
-          rm -rf anykernel anykernel-src
-          git clone --depth=1 --filter=blob:none --sparse -b main \
-            https://github.com/ZxAlif-ID/Kernel_F6 anykernel-src
-          cd anykernel-src
-          git sparse-checkout set anykernel
-          cp -r anykernel ../anykernel
-          cd ..
-          rm -rf anykernel-src
-
+          # AnyKernel3 sudah di-commit di repo ini (folder anykernel/) — pola yang
+          # dipakai workflow Mohithash yang SUKSES (Kernel_F6): tidak ada git clone
+          # saat packaging. Git clone di step ini gagal "exit code 3" di runner
+          # (osm0sis di run #5, fork sendiri di run #6), padahal sama clone sukses
+          # di mesin lokal — jadi sumber masalahnya runner, bukan repo-nya.
           cd anykernel
 
-          rm -rf ramdisk patch modules README.md LICENSE LICENSE.txt
+          printf '%s\n' \
+            '# AnyKernel3 Ramdisk Mod Script' \
+            '# osm0sis @ xda-developers' \
+            '' \
+            '## AnyKernel setup' \
+            '# begin properties' \
+            "properties() { '" \
+            "kernel.string=Flavenz Kernel (${FLAVOR}) by ZxAlif-ID" \
+            'do.devicecheck=1' \
+            'do.modules=0' \
+            'do.systemless=1' \
+            'do.cleanup=1' \
+            'do.cleanuponabort=0' \
+            'device.name1=peridot' \
+            'device.name2=peridot_global' \
+            "'; } # end properties" \
+            '' \
+            '## AnyKernel install' \
+            '# boot shell variables' \
+            'block=/dev/block/by-name/boot;' \
+            'is_slot_device=1;' \
+            'ramdisk_compression=auto;' \
+            'patch_vbmeta_flag=auto;' \
+            'no_magisk_check=1;' \
+            '' \
+            '# import functions/variables and setup patching (DO NOT REMOVE)' \
+            '. tools/ak3-core.sh;' \
+            '' \
+            "ui_print \"Flashing Flavenz Kernel (${FLAVOR})...\";" \
+            'split_boot;' \
+            'flash_boot;' \
+            > anykernel.sh
 
-          cat << EOF > anykernel.sh
-          # AnyKernel3 Ramdisk Mod Script
-          # osm0sis @ xda-developers
+          cp ../kernel/out/arch/arm64/boot/Image ./Image
 
-          ## AnyKernel setup
-          properties() { '
-          kernel.string=Flavenz Kernel (${FLAVOR}) by ZxAlif-ID
-          do.devicecheck=1
-          do.modules=0
-          do.systemless=1
-          do.cleanup=1
-          do.cleanuponabort=0
-          device.name1=peridot
-          device.name2=peridot_global
-          '; } # end properties
-
-          ## AnyKernel methods
-          . tools/ak3-core.sh
-
-          ## AnyKernel file attributes
-          dump_boot;
-          ui_print "Flashing Flavenz Kernel (${FLAVOR})...";
-          write_boot;
-          EOF
-
-          cp ${GITHUB_WORKSPACE}/kernel/out/arch/arm64/boot/Image.gz .
-
-          zip -r9 ${ZIPPATH} * -x ".git*" README.md LICENSE > /dev/null
+          zip -r9 "${ZIPPATH}" . -x "*.git*" "LICENSE.txt" > /dev/null
           echo "Successfully created ${ZIPNAME}"
 
       - name: Upload Kernel Release Artifacts
