@@ -155,6 +155,38 @@ Peridot-Kernel-ACK-KSUNext-v3.3.0-SUSFS-v2.1.0-droidspaces-YYYYMMDD.zip       (a
 - **Branch `17` sudah tidak ada** di fork (per 08 Sep 2026). Branch yang ada: `main`, `theettam-2.7`, `theettam-2.7-lts176`, `theettam-premium-sukisu`, `bestrom-a17-theettam`, `flazen-fix-v2.1`, `peridot-6.1.175`, `vos-16.2-clean-optimized`, `releases`
 - Workflow memakai branch **`main`** sebagai sumber AnyKernel3 (isi `anykernel/` identik dengan Mohithash; yang dipakai di zip adalah `anykernel.sh` generate sendiri, bukan milik fork)
 
+## Status Task Terkini (2026-09-08 malam — SEMUA SELESAI)
+1. **Fix flash abort OrangeFox** (`a76a91b`): generated + vendored `anykernel.sh` → `block=boot` + `is_slot_device=auto` (proven Mohithash); patch `ak3-core.sh` tambah fallback `/system/bin/getprop` + parsing `/proc/bootconfig` (unit-tested). Akar masalah di `logs/recovery.log` (slot via bootconfig, tanpa `getprop` di PATH installer).
+2. **Job `release` auto-publish** (`a76a91b` + `d91e765`): setelah kedua leg matrix sukses → unwrap zip pembungkus (deteksi by content `anykernel.sh`), guard COUNT==2, `SHA256SUMS.txt`, publish RAW assets ke Release `Flavenz-YYYYMMDD` + notes bilingual. Bug unwrap pertama (deteksi `unzip -l | grep '\.zip$'` menghapus flashable — header `Archive:` selalu match) sudah fix di `d91e765`.
+3. **Verifikasi akhir run 34283279734: 3 job HIJAU** → Release `Flavenz-20260908`: 2 zip @ 17.2 MB + SHA256SUMS.txt; zip diunduh & dicek lokal (0 nested zip, header baru ada, patch ada, sha256 OK).
+4. **Docs & disclaimer + LICENSE GPLv2** (`2f03c17`, `010c8df`): README Disclaimer (project pribadi, AS-IS, tanggung jawab masing-masing, keamanan tidak dijamin), section Downloads ditulis ulang (Releases = 1 zip langsung; artifacts = dibungkus zip luar), error log sinkron.
+5. **Workflow `compare-kernel-zips.yml`** (`22fa2dd`, run 34290247236 sukses): one-shot perbandingan `template/Kernel-Peridot-Fix.zip` (proven user) vs release zip vs Mohithash v2.8 → laporan otomatis di-commit ke `logs/zip-comparison-<timestamp>.md`. Hasil kunci: template = AK3 Mohithash murni + Image sendiri; zip kita **kompatibel dengan template (PASS ×4)**; AK3 upstream kini `20260904` (kita `20231020`, upstream BELUM punya bootconfig → pertahankan patch).
+6. **Menunggu aksi user**: uji flash zip dari Releases; upload `recovery.log` baru ke `logs/` bila gagal.
+
+## PENDING — Pelajari & Tiru `build-theettam.yml` (Mohithash) sebagai Acuan Alur Workflow
+**Sumber acuan (JANGAN dimodifikasi isinya, murni dipelajari polanya)**: https://github.com/Mohithash/kernel_xiaomi_sm8635/blob/theettam-2.8/.github/workflows/build-theettam.yml (ada juga di branch `17` & `master`; file pendukung: `scripts/ci/build-flavor.sh`, `scripts/ci/pins.env`, `scripts/ci/kmi-baseline/`)
+
+Alur yang membuatnya "bekerja sangat baik" (hasil analisis 2026-09-08):
+1. **Plan job** — job `plan` menghasilkan daftar flavor via `$GITHUB_OUTPUT` (dinamis; flavor APatch hanya masuk matrix bila input superkey diisi) → matrix build tidak perlu diedit saat menambah flavor.
+2. **Build per flavor via SATU script** — semua flavor dikerjakan `scripts/ci/build-flavor.sh` (CI dan lokal = perilaku identik: pin sama, toolchain sama, gate sama). Workflow YAML hanya orkestrasi.
+3. **Concurrency guard** — `concurrency.group` per ref+event dengan `cancel-in-progress` otomatis (push baru membatalkan run lama; manual dispatch tidak).
+4. **Toolchain PINNED + CHECKSUMMED** — Neutron clang `30062026` dengan `sha256sum -c` (env `NEUTRON_SHA256`), antman di-pin commit + checksum, **tidak pernah di-cache** (binari hasil patch glibc rusak saat cache restore — pernah dibuktikan `cb6b7b88612a`). antman di-retry 4× backoff (mirror hiccup wget exit 8).
+5. **ccache** — `actions/cache` pada `~/.ccache` dengan restore-key per-flavor → build ulang jauh lebih cepat.
+6. **KMI gate** — setiap flavor di-compile-verify & di-gate KMI terhadap baseline boot-tested (`scripts/ci/kmi-baseline/`), `KMI_STRICT=1`, output `kmi-diff.txt` di-artifact.
+7. **Dua artifact terpisah** — `zip-<flavor>` (deliverable, `if-no-files-found: error`) dan `build-<flavor>` (`always()`: `out/build.log`, `Image-*`, `Module.symvers-*`, `config-*`, `kmi-diff.txt` untuk debug).
+8. **Release terpisah & eksplisit** — job `release` hanya jalan bila dispatch dengan `release=true`; hasil SELALU `prerelease: true` + `make_latest: false` dengan disclaimer "compile-verified ≠ boot-tested" di body.
+9. **Pins di `scripts/ci/pins.env`** — semua versi (toolchain, KSU, SUSFS) di satu file env, bukan tersebar di YAML.
+
+**Cara kita meniru (TANPA memodifikasi workflow Mohithash — hanya mengadopsi pola ke workflow kita, base tetap ACK murni & GuidixX, flavor Flavenz: `guidix-full`/`ack-full`)**:
+- [ ] Ekstrak logika build ke `scripts/ci/build-flavor.sh` (satu script per flavor, dipakai CI & lokal)
+- [ ] Pin + checksum Neutron clang & antman di env (tambah `NEUTRON_SHA256`, `ANTMAN_SHA256`)
+- [ ] Tambah job `plan` → matrix dinamis dari output (siapkan slot flavor baru tanpa edit YAML)
+- [ ] Tambah `concurrency` group + `cancel-in-progress`
+- [ ] Tambah ccache per-flavor + `timeout-minutes: 180`
+- [ ] Pertimbangkan KMI gate sederhana (bandingkan symbol/kmi versi `ack-full` vs baseline Image yang proven boot)
+- [ ] Pecah artifact jadi `zip-*` (error) + `build-*` (always, log + build artifacts)
+- [ ] Release: pertahankan job `release` milik kita (sudah jalan), tambahkan pola `prerelease` bila build belum boot-tested
+
 ## Next Decision Point
 Kedua opsi base sudah diimplementasikan sebagai matrix:
 - **guidix-full** = Opsi A (GuidixX 16.2 — ACK + CLO, proven boot)
