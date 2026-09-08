@@ -811,11 +811,23 @@ setup_ak() {
   # slot detection enabled by is_slot_device=1 or auto (from anykernel.sh)
   case $is_slot_device in
     1|auto)
+      # Flavenz patch (peridot): slot may arrive via bootconfig (GKI 6.1 ABL passes
+      # androidboot.* in /proc/bootconfig), and recovery update-binary PATH may lack
+      # getprop entirely (OrangeFox R12). Recovery itself sees ro.boot.slot_suffix —
+      # proven by logs/recovery.log:930 — so read it from every possible source.
       slot=$(getprop ro.boot.slot_suffix 2>/dev/null);
+      [ "$slot" ] || slot=$(/system/bin/getprop ro.boot.slot_suffix 2>/dev/null);
       [ "$slot" ] || slot=$(grep -o 'androidboot.slot_suffix=.*$' /proc/cmdline | cut -d\  -f1 | cut -d= -f2);
+      if [ ! "$slot" ] && [ -r /proc/bootconfig ]; then
+        slot=$(sed -n 's/^androidboot\.slot_suffix[ ]*=[ ]*"\{0,1\}\([^"]*\)"\{0,1\}[ ]*$/\1/p' /proc/bootconfig | head -n1);
+      fi;
       if [ ! "$slot" ]; then
         slot=$(getprop ro.boot.slot 2>/dev/null);
+        [ "$slot" ] || slot=$(/system/bin/getprop ro.boot.slot 2>/dev/null);
         [ "$slot" ] || slot=$(grep -o 'androidboot.slot=.*$' /proc/cmdline | cut -d\  -f1 | cut -d= -f2);
+        if [ ! "$slot" ] && [ -r /proc/bootconfig ]; then
+          slot=$(sed -n 's/^androidboot\.slot[ ]*=[ ]*"\{0,1\}\([^"]*\)"\{0,1\}[ ]*$/\1/p' /proc/bootconfig | head -n1);
+        fi;
         [ "$slot" ] && slot=_$slot;
       fi;
       [ "$slot" == "normal" ] && unset slot;

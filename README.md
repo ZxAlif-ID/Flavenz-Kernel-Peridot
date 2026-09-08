@@ -61,13 +61,23 @@ Flavenz-Kernel-Peridot/
 
 ## 📦 Downloads
 
-Flashable AnyKernel3 ZIP packages are produced by the GitHub Actions workflow on every run and are available as **artifacts of the run**:
+### GitHub Releases (recommended — single flashable zip, no nesting)
 
-1. Go to **Actions** → **Build Kernel - Peridot (Guidix vs ACK Matrix)**.
-2. Open the latest run (green check).
-3. Download the `Peridot-Kernel-*-KSUNext-v3.3.0-SUSFS-v2.1.0-droidspaces-*.zip` artifact for the flavor you want.
+Every successful build automatically publishes a **GitHub Release** (`Flavenz-YYYYMMDD`) containing:
 
-### Artifact Naming
+- `Peridot-Kernel-Guidix-…-YYYYMMDD.zip` (guidix-full) — raw flashable zip
+- `Peridot-Kernel-ACK-…-YYYYMMDD.zip` (ack-full) — raw flashable zip
+- `SHA256SUMS.txt` — checksums to verify integrity before flashing
+
+1. Go to **Releases**.
+2. Download **one** zip for the flavor you want — it is directly flashable, no extra extraction needed.
+3. (Optional) Verify: `sha256sum -c SHA256SUMS.txt`.
+
+### Actions artifacts (alternative)
+
+Zips are also uploaded as run artifacts (**Actions** → latest green run → Artifacts). Note: downloading an artifact from GitHub always wraps it in an extra outer zip (`<artifact>.zip` → extract → flashable zip inside), so prefer the Releases route.
+
+### Zip Naming
 
 - `Peridot-Kernel-Guidix-KSUNext-v3.3.0-SUSFS-v2.1.0-droidspaces-YYYYMMDD.zip`
 - `Peridot-Kernel-ACK-KSUNext-v3.3.0-SUSFS-v2.1.0-droidspaces-YYYYMMDD.zip`
@@ -92,6 +102,7 @@ This repository includes a fully automated GitHub Actions workflow (`.github/wor
 - Triggered manually via **workflow_dispatch** (Actions → Run workflow).
 - Matrix of **2 parallel jobs**: `guidix-full` and `ack-full`.
 - Steps: free disk space → install dependencies → setup Neutron Clang (with antman glibc patch) → clone kernel source per flavor → apply Droidspaces + ThinLTO configs → apply SYSVIPC kABI patch → setup KernelSU Next v3.3.0 → setup SUSFS v2.1.0 → build (`Image`, `Image.gz`, `dtbs`) → package AnyKernel3 ZIP (vendored `anykernel/` tree + generated `anykernel.sh`) → upload artifact.
+- **Release job**: after both matrix jobs succeed, a `release` job publishes the raw flashable zips + `SHA256SUMS.txt` to GitHub Releases (tag `Flavenz-YYYYMMDD`) with full release notes — no zip-in-zip.
 
 See `docs/kernel-context.md` for the full technical breakdown and the error-fix log.
 

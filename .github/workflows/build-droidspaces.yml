@@ -244,6 +244,8 @@ jobs:
           # di mesin lokal — jadi sumber masalahnya runner, bukan repo-nya.
           cd anykernel
 
+          # block=boot + is_slot_device=auto: identical to Mohithash's anykernel.sh
+          # proven to flash & boot on peridot (incl. OrangeFox R12 — logs/recovery.log)
           printf '%s\n' \
             '# AnyKernel3 Ramdisk Mod Script' \
             '# osm0sis @ xda-developers' \
@@ -263,8 +265,8 @@ jobs:
             '' \
             '## AnyKernel install' \
             '# boot shell variables' \
-            'block=/dev/block/by-name/boot;' \
-            'is_slot_device=1;' \
+            'block=boot;' \
+            'is_slot_device=auto;' \
             'ramdisk_compression=auto;' \
             'patch_vbmeta_flag=auto;' \
             'no_magisk_check=1;' \
@@ -291,3 +293,102 @@ jobs:
           name: Peridot-Kernel-${{ matrix.flavor }}-KSUNext-${{ env.RELEASEDATE || 'release' }}
           path: Peridot-Kernel-*.zip
           if-no-files-found: error
+
+  release:
+    name: Publish to GitHub Releases
+    needs: [build]
+    # release hanya jika kedua job matrix sukses: needs membuat job ini menunggu
+    # SEMUA kombinasi matrix selesai; jika ada yang gagal, job ini tidak jalan.
+    if: ${{ !cancelled() && needs.build.result == 'success' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: Download all built zips
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Verify zips & prepare release body
+        env:
+          KSU_VER: v3.3.0
+          SUSFS_VER: v2.1.0
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          # v4 artifacts bisa memuat zip pembungkus per job — ekstrak dulu semua
+          # pembungkus agar tersisa HANYA zip flashable AnyKernel3 di root.
+          shopt -s nullglob
+          for f in artifacts/*.zip; do
+            if unzip -l "$f" | grep -q '\.zip$'; then
+              d="${f%.zip}__unwrapped"; mkdir -p "$d"
+              unzip -qo "$f" -d "$d"
+              rm -f "$f"
+              find "$d" -name '*.zip' -exec mv {} artifacts/ \;
+              rm -rf "$d"
+            fi
+          done
+          shopt -u nullglob
+          echo "=== zip flashable di artifacts/ ==="
+          ls -lh artifacts/
+          COUNT=$(find artifacts -maxdepth 1 -name 'Peridot-Kernel-*.zip' | wc -l)
+          if [ "${COUNT}" -ne 2 ]; then
+            echo "::error::expected exactly 2 flashable zips, found ${COUNT}"; exit 1
+          fi
+          cd artifacts
+          # checksum untuk verifikasi integritas sebelum flash
+          sha256sum Peridot-Kernel-*.zip > SHA256SUMS.txt
+          # tanggal build diambil dari nama zip → dipakai sebagai tag release
+          DATE=$(ls Peridot-Kernel-*-droidspaces-*.zip | head -n1 | grep -oE '[0-9]{8}' | tail -n1)
+          echo "REL_TAG=Flavenz-${DATE}" >> "$GITHUB_ENV"
+          {
+            echo "REL_BODY<<RELEASE_EOF"
+            echo "## Flavenz Kernel for POCO F6 (Peridot) — build ${DATE}"
+            echo ""
+            echo "Dua zip flashable AnyKernel3 (pilih salah satu flavor):"
+            echo ""
+            echo "| Flavor | Base |"
+            echo "|---|---|"
+            echo "| \`guidix-full\` | GuidixX 16.2 (ACK + Qualcomm CLO) — closest to stock, proven boot |"
+            echo "| \`ack-full\` | ACK android14-6.1 @ \`0c3d559bcd85\` + defconfig Mohithash |"
+            echo ""
+            echo "### Isi (tanpa zip dalam zip — langsung flashable)"
+            echo "- \`${KSU_VER}\` KernelSU Next (pershoot dev-susfs, via init_boot)"
+            echo "- SUSFS \`${SUSFS_VER}\`"
+            echo "- Droidspaces (container) support"
+            echo "- \`SHA256SUMS.txt\` tersedia untuk verifikasi integritas"
+            echo ""
+            echo "### Peringatan"
+            echo "> Project pribadi, AS-IS tanpa garansi. Segala kesalahan/error/kerusakan"
+            echo "> sistem adalah tanggung jawab masing-masing. Keamanan belum dapat"
+            echo "> dipastikan. Backup boot & init_boot sebelum flash."
+            echo ""
+            echo "### Cara flash"
+            echo "1. Download SATU zip flavor di bawah (tidak perlu diekstrak lagi)"
+            echo "2. (Disarankan) Reboot ke OS dulu, lalu kembali ke recovery — agar \`/apex\` tidak ter-mount dari system"
+            echo "3. Flash via TWRP/OrangeFox/NEBULA → Wipe Dalvik/Cache → Reboot"
+            echo ""
+            echo "CI run: ${RUN_URL}"
+            echo "RELEASE_EOF"
+          } >> "$GITHUB_ENV"
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cd artifacts
+          if gh release view "${REL_TAG}" -R "${GITHUB_REPOSITORY}" > /dev/null 2>&1; then
+            echo "Release ${REL_TAG} sudah ada — hapus dulu supaya isi terbaru"
+            gh release delete "${REL_TAG}" -R "${GITHUB_REPOSITORY}" --yes --cleanup-tag
+          fi
+          gh release create "${REL_TAG}" \
+            -R "${GITHUB_REPOSITORY}" \
+            --target "${GITHUB_SHA}" \
+            --title "Flavenz Kernel Peridot — ${REL_TAG}" \
+            --notes-file <(echo "${REL_BODY}") \
+            Peridot-Kernel-*.zip SHA256SUMS.txt
+          echo "=== release terbit ==="
+          gh release view "${REL_TAG}" -R "${GITHUB_REPOSITORY}" --json name,tagName,assets \
+            --jq '"\(.name) [\(.tagName)] assets: " + ([.assets[].name] | join(", "))'

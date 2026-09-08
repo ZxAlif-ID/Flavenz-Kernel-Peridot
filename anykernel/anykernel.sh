@@ -19,8 +19,8 @@ supported.patchlevels=
 
 ### AnyKernel install
 ## boot shell variables
-block=/dev/block/by-name/boot
-is_slot_device=1
+block=boot
+is_slot_device=auto
 ramdisk_compression=auto
 patch_vbmeta_flag=auto
 no_magisk_check=1
