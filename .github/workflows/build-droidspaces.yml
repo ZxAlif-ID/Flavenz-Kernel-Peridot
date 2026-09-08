@@ -194,14 +194,21 @@ jobs:
       - name: Package AnyKernel3
         run: |
           DATE=$(date +%Y%m%d)
+          # Variabel shell biasa — bukan $GITHUB_ENV. GITHUB_ENV hanya terlihat
+          # oleh step BERIKUTNYA, jadi sebelumnya ${ZIPPATH} kosong di step ini:
+          # `zip -r9 "" ...` exit 0 dan menulis file tersembunyi `.zip`, step
+          # tampak sukses, tapi tidak ada zip yang di-upload.
           if [ "${FLAVOR}" = "guidix-full" ]; then
             ZIPNAME="Peridot-Kernel-Guidix-KSUNext-${KERNELSU_VERSION}-SUSFS-${SUSFS_VERSION}-droidspaces-${DATE}.zip"
           elif [ "${FLAVOR}" = "ack-full" ]; then
             ZIPNAME="Peridot-Kernel-ACK-KSUNext-${KERNELSU_VERSION}-SUSFS-${SUSFS_VERSION}-droidspaces-${DATE}.zip"
+          else
+            echo "::error::Unknown FLAVOR '${FLAVOR}'"; exit 1
           fi
+          ZIPPATH="${GITHUB_WORKSPACE}/${ZIPNAME}"
 
           echo "ZIPNAME=${ZIPNAME}" >> $GITHUB_ENV
-          echo "ZIPPATH=${GITHUB_WORKSPACE}/${ZIPNAME}" >> $GITHUB_ENV
+          echo "ZIPPATH=${ZIPPATH}" >> $GITHUB_ENV
           echo "RELEASEDATE=${DATE}" >> $GITHUB_ENV
 
           # AnyKernel3 sudah di-commit di repo ini (folder anykernel/) — pola yang
@@ -247,6 +254,9 @@ jobs:
           cp ../kernel/out/arch/arm64/boot/Image ./Image
 
           zip -r9 "${ZIPPATH}" . -x "*.git*" "LICENSE.txt" > /dev/null
+          # Verifikasi keras: zip harus benar-benar ada dan tidak kosong.
+          [ -s "${ZIPPATH}" ] || { echo "::error::zip not created: ${ZIPPATH}"; exit 1; }
+          ls -lh "${ZIPPATH}"
           echo "Successfully created ${ZIPNAME}"
 
       - name: Upload Kernel Release Artifacts
@@ -254,3 +264,4 @@ jobs:
         with:
           name: Peridot-Kernel-${{ matrix.flavor }}-KSUNext-${{ env.RELEASEDATE || 'release' }}
           path: Peridot-Kernel-*.zip
+          if-no-files-found: error
