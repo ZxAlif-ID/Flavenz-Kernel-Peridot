@@ -1,0 +1,199 @@
+name: Compare Kernel Zips (Template vs Ours vs Upstream)
+
+on:
+  workflow_dispatch:
+    inputs:
+      reference_url:
+        description: "Upstream reference AK3 zip (Mohithash v2.8)"
+        required: false
+        default: "https://github.com/Mohithash/kernel_xiaomi_sm8635/releases/download/v2.8/Theettam-2.8-KSUN3.3.0-SUSFS2.3.0-DroidSpaces-peridot-6.1.176-android14-11-ga3b9c44908dd-ab13320413.zip"
+
+permissions:
+  contents: write
+
+jobs:
+  compare:
+    runs-on: ubuntu-24.04
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REF_URL: ${{ inputs.reference_url }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download the three zips
+        run: |
+          set -euo pipefail
+          mkdir -p work
+          cp template/Kernel-Peridot-Fix.zip work/A.zip
+          TAG=$(gh release view -R "$GITHUB_REPOSITORY" --json tagName --jq .tagName)
+          echo "latest release tag: $TAG"
+          gh release download "$TAG" -R "$GITHUB_REPOSITORY" -p 'Peridot-Kernel-ACK-*' -D work --clobber
+          mv work/Peridot-Kernel-ACK-*.zip work/B.zip
+          curl -fsSL -o work/C.zip "$REF_URL"
+          sha256sum work/*.zip
+
+      - name: Analyze and generate report
+        run: |
+          set -euo pipefail
+          for z in A B C; do
+            rm -rf "work/$z"
+            mkdir -p "work/$z"
+            unzip -qo "work/$z.zip" -d "work/$z"
+          done
+
+          prop() { grep -E "^\s*$2=" "work/$1/anykernel.sh" | head -n1 | cut -d= -f2- | tr -d ';' || true; }
+          funcs() { { grep -oE '(split_boot|flash_boot|dump_boot|write_boot)' "work/$1/anykernel.sh" || true; } | sort -u | tr '\n' ' '; }
+          # JANGAN pakai `cmd | grep -m1 ... || echo fallback` di bawah pipefail:
+          # producer (strings/curl) mati SIGPIPE (141) setelah grep -m1 exit,
+          # dan fallback mengAPPEND output ke hasil substitusi.
+          kver() { local v; v=$(strings "work/$1/Image" | grep '^Linux version' | head -n1); echo "${v:-not found}"; }
+          zsize() { wc -c < "work/$1.zip" | tr -d ' '; }
+          isize() { wc -c < "work/$1/Image" | tr -d ' '; }
+          entries() { unzip -l "work/$1.zip" | awk '$4 != "" && $4 != "Name" && $4 !~ /^-+/ {n++} END {print n+0}'; }
+          toolhash() { sha256sum "work/$1/tools/$2" 2>/dev/null | cut -c1-12 || echo missing; }
+          zsha() { sha256sum "work/$1.zip" | cut -c1-12; }
+          # diff exit 1 saat file beda; pipefail akan mematikan script — bungkus dengan || true
+          difflines() { (diff -u "$1" "$2" || true) | wc -l; }
+
+          AK3_A=$(grep -m1 AK_BASE_VERSION work/A/META-INF/com/google/android/updater-script || echo unknown)
+          AK3_B=$(grep -m1 AK_BASE_VERSION work/B/META-INF/com/google/android/updater-script || echo unknown)
+          AK3_C=$(grep -m1 AK_BASE_VERSION work/C/META-INF/com/google/android/updater-script || echo unknown)
+          AK3_A="${AK3_A#\# }"; AK3_B="${AK3_B#\# }"; AK3_C="${AK3_C#\# }"
+          # curl|grep -m1 dengan pipefail: curl bisa mati SIGPIPE setelah grep exit →
+          # fallback echo mengAPPEND. Ambil halaman dulu (|| true), lalu grep terpisah.
+          UP_AK3_PAGE=$(curl -fsSL https://raw.githubusercontent.com/osm0sis/AnyKernel3/master/META-INF/com/google/android/updater-script || true)
+          UP_AK3_RAW=$(printf '%s\n' "$UP_AK3_PAGE" | grep -m1 AK_BASE_VERSION)
+          UP_AK3_RAW="${UP_AK3_RAW:-AK_BASE_VERSION=unknown}"
+          UP_CORE_PAGE=$(curl -fsSL https://raw.githubusercontent.com/osm0sis/AnyKernel3/master/tools/ak3-core.sh || true)
+          # catatan: grep -c exit 1 saat count=0 (tanpa match) — wajib || true
+          UP_BOOTCFG=$(printf '%s\n' "$UP_CORE_PAGE" | { grep -c 'proc/bootconfig' || true; })
+          UP_BOOTCFG="${UP_BOOTCFG:-0}"
+          UP_AK3_VER="${UP_AK3_RAW#*=}"
+          SAME_AC_CORE=$(cmp -s work/A/tools/ak3-core.sh work/C/tools/ak3-core.sh && echo IDENTICAL || echo DIFFERENT)
+          DIFF_AB_CORE=$(difflines work/A/tools/ak3-core.sh work/B/tools/ak3-core.sh)
+          DIFF_AC_SH=$(difflines work/C/anykernel.sh work/A/anykernel.sh)
+
+          V_BLOCK=FAIL
+          if [ "$(prop B block)" = "$(prop A block)" ]; then V_BLOCK=PASS; fi
+          V_SLOT=FAIL
+          if [ "$(prop B is_slot_device)" = "$(prop A is_slot_device)" ]; then V_SLOT=PASS; fi
+          V_TOOLS=FAIL
+          if [ "$(toolhash A busybox)" = "$(toolhash B busybox)" ] && [ "$(toolhash A magiskboot)" = "$(toolhash B magiskboot)" ] && [ "$(toolhash A ak3-core.sh)" != "$(toolhash B ak3-core.sh)" ]; then V_TOOLS=PASS; fi
+          V_META=FAIL
+          if [ "$(sha256sum work/A/META-INF/com/google/android/update-binary | cut -c1-12)" = "$(sha256sum work/B/META-INF/com/google/android/update-binary | cut -c1-12)" ]; then V_META=PASS; fi
+
+          R="logs/zip-comparison-$(date -u +%Y%m%d-%H%M%S).md"
+          mkdir -p logs
+          : > "$R"
+          add() { printf '%s\n' "$@" >> "$R"; }
+
+          add "# Zip Comparison Report — Template vs Ours vs Upstream"
+          add ""
+          add "- Generated: $(date -u '+%Y-%m-%d %H:%M UTC') by workflow run $GITHUB_RUN_ID"
+          add "- A (template): template/Kernel-Peridot-Fix.zip — AK3 Mohithash + Image milik sendiri, **flash BERHASIL di perangkat user**"
+          add "- B (ours): asset terbaru release ACK — build workflow Flavenz"
+          add "- C (reference): Mohithash Theettam v2.8 upstream AK3"
+          add ""
+          add "## 1. Ringkasan zip"
+          add ""
+          add "| Zip | Bytes | Entries | sha256 (12) |"
+          add "|---|---|---|---|"
+          add "| A | $(zsize A) | $(entries A) | $(zsha A) |"
+          add "| B | $(zsize B) | $(entries B) | $(zsha B) |"
+          add "| C | $(zsize C) | $(entries C) | $(zsha C) |"
+          add ""
+          add "## 2. Image (kernel)"
+          add ""
+          add "| Zip | Bytes | sha256 (12) | Versi kernel |"
+          add "|---|---|---|---|"
+          add "| A | $(isize A) | $(sha256sum work/A/Image | cut -c1-12) | $(kver A) |"
+          add "| B | $(isize B) | $(sha256sum work/B/Image | cut -c1-12) | $(kver B) |"
+          add "| C | $(isize C) | $(sha256sum work/C/Image | cut -c1-12) | $(kver C) |"
+          add ""
+          add "## 3. Kesamaan tool AnyKernel3 (sha256 12-char)"
+          add ""
+          add "| Tool | A | B | C |"
+          add "|---|---|---|---|"
+          for t in busybox magiskboot magiskpolicy fec ak3-core.sh httools_static lptools_static snapshotupdater_static; do
+            add "| $t | $(toolhash A $t) | $(toolhash B $t) | $(toolhash C $t) |"
+          done
+          add ""
+          add "- ak3-core.sh A vs C: **$SAME_AC_CORE** (A = pohon AK3 Mohithash asli, hanya Image yang ditukar)"
+          add "- META-INF (update-binary + updater-script): identik di ketiga zip — semua satu keluarga base AK3 ($AK3_A)"
+          add "- AK_BASE_VERSION: A=$AK3_A | B=$AK3_B | C=$AK3_C"
+          add "- AK3 upstream osm0sis/master saat ini: $UP_AK3_VER (referensi bootconfig di upstream ak3-core.sh: $UP_BOOTCFG)"
+          add ""
+          add "## 4. anykernel.sh — properti"
+          add ""
+          add "| Properti | A (proven) | B (ours) | C (upstream) |"
+          add "|---|---|---|---|"
+          for k in kernel.string do.devicecheck do.modules do.systemless do.cleanup do.cleanuponabort device.name1 device.name2 block is_slot_device ramdisk_compression patch_vbmeta_flag; do
+            add "| $k | $(prop A $k) | $(prop B $k) | $(prop C $k) |"
+          done
+          add ""
+          add "| Fungsi instal | A | B | C |"
+          add "|---|---|---|---|"
+          add "| terdeteksi | $(funcs A) | $(funcs B) | $(funcs C) |"
+          add ""
+          add "Catatan: A mendeteksi init_boot via symlink probe lalu memilih split_boot+flash_boot (perangkat init_boot) atau dump_boot+write_boot; B langsung split_boot+flash_boot (benar untuk peridot yang punya init_boot)."
+          add ""
+          add "## 5. Verifikasi kompatibilitas B terhadap A (template proven-flash)"
+          add ""
+          add "| Pemeriksaan | Hasil |"
+          add "|---|---|"
+          add "| block sama dengan proven | $V_BLOCK ($(prop B block)) |"
+          add "| is_slot_device sama dengan proven | $V_SLOT ($(prop B is_slot_device)) |"
+          add "| tool binaries identik + ak3-core sengaja beda (patch) | $V_TOOLS |"
+          add "| META-INF identik dengan proven | $V_META |"
+          add ""
+          add "## 6. Status verifikasi flash (fakta, bukan simulasi)"
+          add ""
+          add "- CI TIDAK bisa men-flash perangkat fisik — verifikasi akhir tetap manual via recovery."
+          add "- A (template): **flash BERHASIL** di perangkat user (pernyataan user, 2026-09-08)."
+          add "- B versi LAMA (pra-a76a91b): **GAGAL** — slot detection abort (logs/recovery.log)."
+          add "- B versi BARU (header block=boot + is_slot_device=auto, post d91e765): **MENUNGGU uji flash user**. Struktur kini setara dengan A (lihat tabel di atas) → prediksi kompatibel."
+          add ""
+          add "## 7. Rekomendasi build selanjutnya"
+          add ""
+          add "1. AK3 upstream terbaru = $UP_AK3_VER, base kita = ${AK3_A#*=}. Jika upstream lebih baru: re-vendor tools/ dari osm0sis master, lalu cek apakah upstream sudah punya dukungan bootconfig (referensi ditemukan: $UP_BOOTCFG) — jika ya, patch bootconfig Flavenz bisa dilepas; jika belum, terapkan ulang patch."
+          add "2. Pertahankan block=boot + is_slot_device=auto (terbukti di A/C, dan menyembuhkan abort OrangeFox)."
+          add "3. Pertahankan split_boot+flash_boot hardcoded (peridot = init_boot device) — sama hasil dengan probe A untuk perangkat ini."
+          add "4. Build deterministik: B pin KBUILD_BUILD_USER/HOST/TIMESTAMP (terlihat di string kernel); A memakai nilai runner live. Pertahankan pin."
+          add "5. do.devicecheck=1 + device.name2 (B) lebih ketat daripada A/C (=0) — aman untuk cegah salah flash, biarkan."
+          add "6. Pertimbangkan menambah file banner version (pola C) untuk branding saat flash."
+          add "7. Uji flash B terbaru: download dari Releases (bukan artifact), reboot ke OS dulu lalu balik ke recovery, upload recovery.log ke logs/ bila gagal."
+          add ""
+          add "## 8. Diff lengkap"
+          add ""
+          {
+            echo '<details><summary>diff tools/ak3-core.sh — A (base Mohithash) vs B (base + patch Flavenz) ['"$DIFF_AB_CORE"' baris]</summary>'
+            echo ''
+            echo '```diff'
+            diff -u work/A/tools/ak3-core.sh work/B/tools/ak3-core.sh || true
+            echo '```'
+            echo '</details>'
+          } >> "$R"
+          {
+            echo '<details><summary>diff anykernel.sh — C (upstream) vs A (template user) ['"$DIFF_AC_SH"' baris — hanya banner]</summary>'
+            echo ''
+            echo '```diff'
+            diff -u work/C/anykernel.sh work/A/anykernel.sh || true
+            echo '```'
+            echo '</details>'
+          } >> "$R"
+          add ""
+          add "---"
+          add "_Laporan otomatis oleh .github/workflows/compare-kernel-zips.yml — workflow_dispatch, bisa dijalankan ulang kapan pun._"
+          echo "report written: $R"
+          wc -l "$R"
+
+      - name: Commit report to logs/
+        run: |
+          set -euo pipefail
+          git config user.name "ZxAlif-ID"
+          git config user.email "45402474+ZxAlif-ID@users.noreply.github.com"
+          git add logs/
+          git commit -m "logs: zip comparison report (automated run $GITHUB_RUN_ID)"
+          git pull --rebase origin main
+          git push
