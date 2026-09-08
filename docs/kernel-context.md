@@ -134,6 +134,7 @@ releases/
 | ZIP masuk ke root `releases/` branch | Fix: zip masuk ke subfolder `${RELEASEDATE}/` |
 | ZIPNAME `full` flavor tidak informatif | Fix: `Peridot-Kernel-KSUNext-{VER}-SUSFS-{VER}-droidspaces-{DATE}.zip` |
 | KSU-Next `next` branch tidak include SUSFS hooks | Ganti ke `pershoot/KernelSU-Next` branch `dev-susfs` — hooks built-in, `10_enable_susfs_for_ksu.patch` tidak diperlukan |
+| `fatal: Remote branch theettam-2.7 not found` | Implementasi **Dynamic Branch Fallback Loop** (`17` → `main` → `theettam-2.8` → `theettam-2.7`) untuk kloning `peridot-defconfig` secara fleksibel |
 
 ## Status Saat Ini
 - Workflow **v1.10** — terakhir diupdate 06 Sep 2026
