@@ -76,12 +76,38 @@ jobs:
       - name: Clone Pure ACK Source + Defconfig
         if: ${{ matrix.flavor == 'ack-full' }}
         run: |
+          # Clone android.googlesource.com sering putus di tengah jalan di runner
+          # ("fetch-pack: unexpected disconnect", "early EOF", exit 128) — flaky,
+          # bukan bug repo. Retry dengan backoff; konfigurasi low-speed supaya
+          # clone macet tidak menggantung sampai timeout job.
           rm -rf kernel
-          git clone --filter=blob:none --no-checkout \
-            https://android.googlesource.com/kernel/common \
-            kernel
+          git config --global http.lowSpeedLimit 1000
+          git config --global http.lowSpeedTime 300
+          ACK_OK=false
+          for i in 1 2 3; do
+            echo "ACK clone attempt $i/3"
+            if git clone --filter=blob:none --no-checkout \
+              https://android.googlesource.com/kernel/common \
+              kernel; then
+              ACK_OK=true
+              break
+            fi
+            rm -rf kernel
+            [ "$i" = 3 ] || sleep $((i * 30))
+          done
+          [ "$ACK_OK" = true ] || { echo "::error::ACK clone failed after 3 attempts"; exit 1; }
           cd kernel
-          git checkout $KERNEL_COMMIT
+          # Checkout commit juga bisa kena flake jaringan yang sama — retry.
+          CO_OK=false
+          for i in 1 2 3; do
+            echo "ACK checkout attempt $i/3"
+            if git checkout $KERNEL_COMMIT; then
+              CO_OK=true
+              break
+            fi
+            sleep $((i * 15))
+          done
+          [ "$CO_OK" = true ] || { echo "::error::ACK checkout failed after 3 attempts"; exit 1; }
           cd ..
 
           echo "Attempting to clone peridot-defconfig with branch fallback..."
