@@ -7,6 +7,10 @@ on:
         description: "Trigger Guidix vs ACK Kernel Build Matrix"
         required: false
         default: "all"
+      rom_build_date:
+        description: "ro.build.date ROM yang terpasang. Disarankan epoch: `adb shell getprop ro.build.date.utc`, atau format 'YYYY-MM-DD', atau string getprop utuh. Timestamp build kernel (uname -a) diturunkan darinya — fix Duck Detector build-time drift. Default = tanggal port HyperOS 3."
+        required: false
+        default: "2026-07-01"
 
 jobs:
   build:
@@ -24,9 +28,12 @@ jobs:
       SUSFS_VERSION: v2.1.0
       FLAVOR: ${{ matrix.flavor }}
       # Duck Detector Build Time Drift & Mismatch Fix
+      # KBUILD_BUILD_TIMESTAMP TIDAK di-pin hardcode lagi — dihitung dinamis di
+      # step "Compute ROM-synced build timestamp" dari input rom_build_date,
+      # supaya tanggal build di uname -a selalu match ro.build.date ROM yang
+      # sedang terpasang (tidak drift lagi saat ROM di-update).
       KBUILD_BUILD_USER: "builder"
       KBUILD_BUILD_HOST: "droidspaces-ci"
-      KBUILD_BUILD_TIMESTAMP: "Mon Sep  7 12:00:00 UTC 2026"
 
     steps:
       - name: Free disk space
@@ -39,6 +46,39 @@ jobs:
 
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Compute ROM-synced build timestamp
+        env:
+          # github.event.inputs.* bukan inputs.* — konteks inputs.* pernah
+          # gagal di workflow ini (lihat error log: kasus inputs.flavor)
+          ROM_BUILD_DATE: ${{ github.event.inputs.rom_build_date }}
+        run: |
+          set -euo pipefail
+          # Trim spasi di tepi input (dispatch UI kadang menambah newline).
+          IN=$(printf '%s' "${ROM_BUILD_DATE}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+          if [ -z "${IN}" ]; then
+            echo "::error::rom_build_date kosong — isi epoch (getprop ro.build.date.utc), YYYY-MM-DD, atau string ro.build.date utuh"
+            exit 1
+          fi
+          TS=""
+          if printf '%s' "${IN}" | grep -qE '^[0-9]{9,11}$'; then
+            # Epoch (disarankan: adb shell getprop ro.build.date.utc)
+            TS=$(date -u -d "@${IN}" '+%a %b %e %H:%M:%S UTC %Y')
+          elif TS=$(date -u -d "${IN}" '+%a %b %e %H:%M:%S UTC %Y' 2>/dev/null); then
+            # Format bebas yang dipahami GNU date: 2026-07-01,
+            # "2026-07-01 12:00:00", atau string ro.build.date utuh
+            :
+          else
+            echo "::error::rom_build_date tidak bisa diparse: '${IN}' (epoch / YYYY-MM-DD / ro.build.date string)"
+            exit 1
+          fi
+          # Format identik dengan "Wed Dec 3 02:05:30 UTC 2025" milik kernel
+          # stock — scripts/mkcompile_h menuliskannya apa adanya ke uts_banner
+          # (#1 SMP PREEMPT <TS> di uname -a). Sinkron dengan ro.build.date
+          # ROM → Duck Detector "build time drift" tidak mempan lagi, dan
+          # tetap deterministik untuk input yang sama.
+          echo "KBUILD_BUILD_TIMESTAMP=${TS}" >> "$GITHUB_ENV"
+          echo "Kernel build timestamp disinkronkan ke ROM: ${TS}"
 
       - name: Install dependencies
         run: |
