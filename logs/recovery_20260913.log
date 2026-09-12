@@ -1,0 +1,2337 @@
+Starting OrangeFox Recovery R12.0_5 [crypto, core: R12.0] (built on Fri Jul 17 23:16:23 2026 for peridot [dev_ver: 2026-06-13 (fd98f33a) (branch: fox_14.1)]; pid 324)
+RECOVERY_SDCARD_ON_DATA := true
+TW_NO_USB_STORAGE := true
+TW_HAS_EDL_MODE := true
+TW_INCLUDE_FASTBOOTD := true
+PRODUCT_USE_DYNAMIC_PARTITIONS := true
+TW_INCLUDE_CRYPTO := true
+I:TW_BRIGHTNESS_PATH := /sys/class/backlight/panel0-backlight/brightness
+I:Found brightness file at '/sys/class/backlight/panel0-backlight/brightness'
+I:TWFunc::Set_Brightness: Setting brightness control to 200
+I:TW_EXCLUDE_ENCRYPTED_BACKUPS := true
+I:LANG: en
+I:AB_OTA_UPDATER := true
+I:TW_EXCLUDE_NANO := true
+I:Startup Commands: 
+=> Linking mtab
+=> Processing /etc/recovery.fstab
+I:Reading /etc/twrp.flags
+I:Reading /etc/recovery.fstab
+I:Processing '/system'
+I:Created '/system_root' folder.
+I:Unhandled flag: 'avb=vbmeta_system'
+I:Unhandled flag: 'first_stage_mount'
+I:Unhandled flag: 'avb_keys=/avb/q-gsi.avbpubkey:/avb/r-gsi.avbpubkey:/avb/s-gsi.avbpubkey:/avb/t-gsi.avbpubkey'
+I:Trying to prepare system from super partition
+I:unable to update logical partition: /system_root
+I:Processing '/system'
+I:Unhandled flag: 'avb=vbmeta_system'
+I:Unhandled flag: 'first_stage_mount'
+I:Unhandled flag: 'avb_keys=/avb/q-gsi.avbpubkey:/avb/r-gsi.avbpubkey:/avb/s-gsi.avbpubkey:/avb/t-gsi.avbpubkey'
+I:Trying to prepare system from super partition
+I:unable to update logical partition: /system_root
+I:Processing '/system_ext'
+I:Unhandled flag: 'avb=vbmeta_system'
+I:Unhandled flag: 'first_stage_mount'
+I:Trying to prepare system_ext from super partition
+I:unable to update logical partition: /system_ext
+I:Processing '/system_ext'
+I:Unhandled flag: 'avb=vbmeta_system'
+I:Unhandled flag: 'first_stage_mount'
+I:Trying to prepare system_ext from super partition
+I:unable to update logical partition: /system_ext
+I:Processing '/product'
+I:Unhandled flag: 'avb=vbmeta_system'
+I:Unhandled flag: 'first_stage_mount'
+I:Trying to prepare product from super partition
+I:unable to update logical partition: /product
+I:Processing '/product'
+I:Unhandled flag: 'avb=vbmeta_system'
+I:Unhandled flag: 'first_stage_mount'
+I:Trying to prepare product from super partition
+I:unable to update logical partition: /product
+I:Processing '/vendor'
+I:Unhandled flag: 'avb=vbmeta'
+I:Unhandled flag: 'first_stage_mount'
+I:Trying to prepare vendor from super partition
+I:unable to update logical partition: /vendor
+I:Processing '/vendor'
+I:Unhandled flag: 'avb=vbmeta'
+I:Unhandled flag: 'first_stage_mount'
+I:Trying to prepare vendor from super partition
+I:unable to update logical partition: /vendor
+I:Processing '/vendor_dlkm'
+I:Unhandled flag: 'avb=vbmeta'
+I:Unhandled flag: 'first_stage_mount'
+I:Trying to prepare vendor_dlkm from super partition
+I:unable to update logical partition: /vendor_dlkm
+I:Processing '/vendor_dlkm'
+I:Unhandled flag: 'avb=vbmeta'
+I:Unhandled flag: 'first_stage_mount'
+I:Trying to prepare vendor_dlkm from super partition
+I:unable to update logical partition: /vendor_dlkm
+I:Processing '/system_dlkm'
+I:Unhandled flag: 'avb=vbmeta'
+I:Unhandled flag: 'first_stage_mount'
+I:Trying to prepare system_dlkm from super partition
+I:unable to update logical partition: /system_dlkm
+I:Processing '/system_dlkm'
+I:Unhandled flag: 'avb=vbmeta'
+I:Unhandled flag: 'first_stage_mount'
+I:Trying to prepare system_dlkm from super partition
+I:unable to update logical partition: /system_dlkm
+I:Processing '/odm'
+I:Unhandled flag: 'avb=vbmeta'
+I:Unhandled flag: 'first_stage_mount'
+I:Trying to prepare odm from super partition
+I:unable to update logical partition: /odm
+I:Processing '/odm'
+I:Unhandled flag: 'avb=vbmeta'
+I:Unhandled flag: 'first_stage_mount'
+I:Trying to prepare odm from super partition
+I:unable to update logical partition: /odm
+I:Processing '/mi_ext'
+I:Created '/mi_ext' folder.
+I:Unhandled flag: 'avb=vbmeta'
+I:Unhandled flag: 'first_stage_mount'
+I:Unhandled flag: 'nofail'
+I:Trying to prepare mi_ext from super partition
+I:unable to update logical partition: /mi_ext
+I:Processing '/mi_ext'
+I:Unhandled flag: 'avb=vbmeta'
+I:Unhandled flag: 'first_stage_mount'
+I:Unhandled flag: 'nofail'
+I:Trying to prepare mi_ext from super partition
+I:unable to update logical partition: /mi_ext
+I:Processing '/metadata'
+I:Unhandled flag: 'first_stage_mount'
+I:Processing '/data'
+I:Unhandled flag: 'latemount'
+I:FBE contents 'aes-256-xts', filenames 'aes-256-cts:v2+inlinecrypt_optimized+wrappedkey_v0'
+I:setting Key_Directory to: /metadata/vold/metadata_encryption
+I:Metadata contents 'aes-256-xts', filenames 'wrappedkey_v0'
+I:Unhandled flag: 'reservedsize=128M'
+I:Unhandled flag: 'sysfs_path=/sys/devices/platform/soc/1d84000.ufshc'
+I:Unhandled flag: 'checkpoint=fs'
+I:Ignoring the 'fscompress' fstab flag
+I:Found an additional entry for '/data'
+I:Processing '/data'
+I:Processing '/misc'
+I:Processing '/persist'
+I:Created '/persist' folder.
+I:PassBak: Found backup
+I:TWFunc::Fixup_Time: Pre-fix date and time: 2026-07-17--23-16-23
+I:TWFunc::Fixup_Time: Setting time offset from file /sys/class/rtc/rtc0/since_epoch
+I:TWFunc::Fixup_Time: will attempt to use the ats files now.
+I:TWFunc::Fixup_Time: Setting time offset from file /persist/time/ats_2, offset 1779755369551
+I:TWFunc::Fixup_Time: Date and time corrected: 2026-05-26--00-37-15
+I:Processing '/cache'
+I:Created '/cache' folder.
+I:Processing remaining twrp.flags
+I:Processing '/bluetooth'
+I:Created '/bluetooth' folder.
+I:Processing '/bluetooth_image'
+I:Processing '/boot'
+I:Processing '/dsp'
+I:Created '/dsp' folder.
+I:Processing '/dsp_image'
+I:Processing '/dtbo'
+I:Processing '/efs1'
+I:Processing '/efs2'
+I:Processing '/efsc'
+I:Processing '/efsg'
+I:Processing '/init_boot'
+I:Processing '/modem'
+I:Created '/modem' folder.
+I:Processing '/modem_img'
+I:Processing '/persist_image'
+I:Processing '/recovery'
+I:Processing '/storage'
+I:Processing '/usb_otg'
+I:Created '/usb_otg' folder.
+I:Processing '/vbmeta'
+I:Processing '/vbmeta_system'
+I:Processing '/vendor_boot'
+I:Attempting to load modules
+I:Checking directory: /vendor/lib/modules
+I:Unable to open module directory: /vendor/lib/modules. Skipping
+I:number of modules loaded by init: 332
+I:found module to dedupe: qti_battery_charger.ko
+I:mounting /tmp/vendor/lib/modules on /vendor/lib/modules
+I:Checking directory: /vendor/lib/modules/1.1
+I:Unable to open module directory: /vendor/lib/modules/1.1. Skipping
+I:number of modules loaded by init: 332
+I:found module to dedupe: qti_battery_charger.ko
+I:mounting /tmp/vendor/lib/modules/1.1 on /vendor/lib/modules/1.1
+I:Checking directory: /vendor_dlkm/lib/modules
+I:Unable to open module directory: /vendor_dlkm/lib/modules. Skipping
+I:number of modules loaded by init: 332
+I:found module to dedupe: qti_battery_charger.ko
+I:mounting /tmp/vendor_dlkm/lib/modules on /vendor_dlkm/lib/modules
+I:Force setting casefolding props to true
+I:GetFstabPath: /odm/etc/fstab.default
+I:GetFstabPath: /vendor/etc/fstab.default
+I:GetFstabPath: /system/etc/fstab.default
+I:GetFstabPath: /first_stage_ramdisk/system/etc/fstab.default
+I:GetFstabPath: /fstab.default
+I:GetFstabPath: /first_stage_ramdisk/fstab.default
+I:GetFstabPath: /odm/etc/fstab.qcom
+I:GetFstabPath: /vendor/etc/fstab.qcom
+I:GetFstabPath: /system/etc/fstab.qcom
+I:GetFstabPath: /first_stage_ramdisk/system/etc/fstab.qcom
+I:GetFstabPath: /fstab.qcom
+I:GetFstabPath: /first_stage_ramdisk/fstab.qcom
+I:Fstab: /first_stage_ramdisk/fstab.qcom
+I:Reading /etc/additional.fstab
+I:Processing '/metadata'
+I:Unhandled flag: 'first_stage_mount'
+I:Processing '/data'
+I:Unhandled flag: 'latemount'
+I:FBE contents 'aes-256-xts', filenames 'aes-256-cts:v2+inlinecrypt_optimized+wrappedkey_v0'
+I:setting Key_Directory to: /metadata/vold/metadata_encryption
+I:Metadata contents 'aes-256-xts', filenames 'wrappedkey_v0'
+I:Unhandled flag: 'reservedsize=128M'
+I:Unhandled flag: 'sysfs_path=/sys/devices/platform/soc/1d84000.ufshc'
+I:Unhandled flag: 'checkpoint=fs'
+I:Processing '/data'
+I:Unhandled flag: 'latemount'
+I:FBE contents 'aes-256-xts', filenames 'aes-256-cts:v2+inlinecrypt_optimized+wrappedkey_v0'
+I:setting Key_Directory to: /metadata/vold/metadata_encryption
+I:Metadata contents 'aes-256-xts', filenames 'wrappedkey_v0'
+I:Unhandled flag: 'reservedsize=128M'
+I:Unhandled flag: 'sysfs_path=/sys/devices/platform/soc/1d84000.ufshc'
+I:Unhandled flag: 'checkpoint=fs'
+I:Done processing fstab files
+I:Property ro.boot.product.vendor.sku not found, trying to get vintf manifest file name from ro.board.platform
+I:Separate manifest doesn't exist for 'android.hardware.keymaster'
+I:/vendor/etc/vintf/manifest_pineapple.xml not found. Using default path for manifest.xml
+I:PageManager::LoadFileToBuffer loading filename: '/vendor/etc/vintf/manifest.xml' directly
+I:Looking for 'android.hardware.keymaster' service in manifest
+I:Keymaster_Ver::Unable to find vendor manifest on the device, and no default value set. Checking the ramdisk manifest
+I:Property ro.boot.product.vendor.sku not found, trying to get vintf manifest file name from ro.board.platform
+I:Separate manifest doesn't exist for 'android.hardware.keymaster'
+I:/vendor/etc/vintf/manifest_pineapple.xml not found. Using default path for manifest.xml
+I:PageManager::LoadFileToBuffer loading filename: '/vendor/etc/vintf/manifest.xml' directly
+I:Looking for 'android.hardware.keymaster' service in manifest
+I:Keymaster_Ver::Using keymaster version '4.x' for decryption
+Starting the UI...
+width: 1220, height: 2712
+setting DRM_FORMAT_XBGR8888 and GGL_PIXEL_FORMAT_RGBA_8888
+setting DRM_FORMAT_XBGR8888 and GGL_PIXEL_FORMAT_RGBA_8888
+number of lms in topology 1
+Atomic Commit succeedUsing drm graphics.
+I:TWFunc::Set_Brightness: Setting brightness control to 200
+I:Loading package: splash (/twres/splash.xml)
+I:Load XML directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/splash.xml' directly
+I:Checking resolution...
+I:Scaling theme width 1.129630x and height 1.130000x, offsets x: 0 y: 0 w: 0 h: 0
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Loading page splash
+I:Switching packages (splash)
+I:Setup_Data_Partition::Key_Directory::/metadata/vold/metadata_encryption
+I:Setting up '/data' as data/media emulated storage.
+I:Setting up '/data' as data/media emulated storage.
+I:Not recreating media folder on FBE
+I:Backup folder set to '/data/media/0/Fox/BACKUPS/b362dcbd'
+I:Settings storage is '/data/media/0'
+I:Is_Mounted: Unable to find partition for path '/system_root'
+Unable to find partition for path '/system_root'
+I:Is_Mounted: Unable to find partition for path '/system_root'
+Unable to find partition for path '/system_root'
+I:Decrypt adopted storage starting
+I:PageManager::LoadFileToBuffer loading filename: '/data/system/storage.xml' directly
+I:successfully loaded /data/system/storage.xml
+Parser error: ABX Format Unsupported by RapidXML
+  Start of string: ABX
+E:Error parsing XML file.
+Updating partition details...
+I:Can't probe device /data/media/0
+I:Data backup size is 75093MB, free: 288764MB.
+...done
+/super | /dev/block/by-name/super | Size: 0MB
+   Flags: Can_Be_Backed_Up IsPresent Can_Flash_Img 
+   Alternate_Block_Device: /dev/block/by-name/super
+   Display_Name: super
+   Backup_Path: /super
+   Backup_Name: super
+   Backup_Display_Name: Super (system system system_ext system_ext)
+   Current_File_System: emmc
+   Backup_Method: dd
+
+I:Unmounting main partitions...
+Unable to find partition for path '/system_root'
+I:Attempt to load settings from settings file...
+I:InfoManager loading from '/persist/Fox/.foxs'.
+I:Backup folder set to '/data/media/0/Fox/BACKUPS/b362dcbd'
+I:Version number saved to '/cache/recovery/.version'
+I:Unable to mount '/usb_otg'
+I:Actual block device: '', current file system: 'auto'
+I:TWFunc::Set_Brightness: Setting brightness control to 204
+I:PassBak: Found backup
+I:Themes version: 2.0
+I:Loading package: OrangeFox (/twres/ui.xml)
+I:Load XML directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/zn_TW.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/zh_TW.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/zh_CN.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/vi_VN.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/uk_UA.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/tr_TR.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/th_TH.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/sr_Cyrl.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/ru_RU.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/ru.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/ro_RO.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/pt_PT.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/pt_BR.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/pl_PL.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/no_NO.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/nl_NL.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/ko_KR.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/ja_JP.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/it_IT.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/id_ID.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/hu_HU.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/hu.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/hi_IN.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/he_IL.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/fr_FR.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/fa_IR.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/es_ES.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/es-ES.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/en.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/el_GR.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/de_DE.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/cs_CZ.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/ca_ES.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/bn_BD.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/bg_BG.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/ar_SA.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/en.xml' directly
+parsing languageFile
+parsing languageFile done
+I:PageManager::LoadFileToBuffer loading filename: '/twres/ui.xml' directly
+I:Checking resolution...
+I:Scaling theme width 1.129630x and height 1.130000x, offsets x: 0 y: 0 w: 0 h: 0
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Including file: /persist/Fox/.navbar/navbar.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/persist/Fox/.navbar/navbar.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Including file: /persist/Fox/.theme/font.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/persist/Fox/.theme/font.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/themes/font.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Including file: /persist/Fox/.theme/style.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/persist/Fox/.theme/style.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/themes/style.xml' directly
+I:Loading resources...
+I:Failed to load image from Light/Progress/indeterminate033, error -1
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Including file: /persist/Fox/.theme/accent.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/persist/Fox/.theme/accent.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/themes/accent.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Including file: /twres/resources/vars.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/resources/vars.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Including file: /twres/resources/images.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/resources/images.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Including file: /twres/resources/styles.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/resources/styles.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Including file: /twres/pages/templates/base.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/templates/base.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Including file: /twres/pages/templates/keyboard.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/templates/keyboard.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Including file: /twres/pages/templates/navbar.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/templates/navbar.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Including file: /twres/pages/templates/statusbar.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/templates/statusbar.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Including file: /twres/pages/templates/templates.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/templates/templates.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Including file: /twres/pages/main.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/main.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Loading page main
+I:Loading page navbar
+I:Loading page welcome
+I:Loading page aroma_busy
+I:Loading page fastboot
+I:Including file: /twres/pages/pass.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/pass.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Loading page password_enter
+I:Loading page password_enter_num
+I:Loading page password_enter_pattern
+I:Loading page password_check
+I:Loading page pass_pattern
+I:Loading page pass_pattern_2
+I:Loading page pass_text
+I:Loading page pass_text_2
+I:Loading page pass_pin
+I:Loading page pass_pin_2
+I:Loading page pass_remove
+I:Loading page pass_check
+I:Including file: /twres/pages/install.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/install.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Loading page flash_confirm
+I:Loading page fox_modules_confirm
+I:Loading page queueview
+I:Loading page flash_image_confirm
+I:Loading page flash_image_ab
+I:Loading page add_zip
+I:Loading page flash_zip
+I:Loading page flash_image
+I:Loading page flash_done
+I:Loading page flash_sleep_and_reboot
+I:Loading page flash_image_done
+I:Including file: /twres/pages/wipe.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/wipe.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Loading page wipe
+I:Loading page formatdata
+I:Loading page formatdata_confirm
+I:Loading page wipe_confirm_action
+I:Loading page wipe_action_page
+I:Loading page wipe_action_complete
+I:Loading page checkpartitionlist
+I:Loading page partitionoptions
+I:Loading page refreshfilesystem
+I:Loading page selectfilesystem
+I:Loading page part_options
+I:Including file: /twres/pages/backup.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/backup.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Loading page backup
+I:Loading page check_storage_back
+I:Loading page backup_prep
+I:Loading page backupname
+I:Loading page backupname_auto
+I:Loading page backup_encryption
+I:Loading page backup_encryption2
+I:Loading page checkbackuppassword
+I:Loading page checkbackuppassword2
+I:Loading page backup_run
+I:Loading page backup_digest
+I:Loading page backup_action_complete
+I:Including file: /twres/pages/restore.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/restore.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Loading page restore
+I:Loading page restore_prep
+I:Loading page restore_read
+I:Loading page restore_decrypt
+I:Loading page try_restore_decrypt
+I:Loading page restore_select
+I:Loading page renamebackup
+I:Loading page deletebackup
+I:Loading page restore_run
+I:Loading page restore_confirm_action
+I:Loading page restore_action_page
+I:Loading page restore_action_complete
+I:Including file: /twres/pages/mount.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/mount.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Loading page mount
+I:Loading page usb_mount
+I:Loading page system_readonly_check
+I:Loading page system_readonly_check_ext_context
+I:Loading page system_readonly
+I:Loading page system_readonly_mount
+I:Loading page decrypt
+I:Loading page decrypt_pin
+I:Loading page decrypt_pattern
+I:Loading page decrypt_redirect
+I:Loading page trydecrypt
+I:Loading page reapply_settings
+I:Loading page decrypt_users
+I:Loading page decrypt_users2
+I:Including file: /twres/pages/files.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/files.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Loading page filemanagerlist
+I:Loading page file_quick_actions
+I:Loading page select_path
+I:Loading page files_mkdir
+I:Loading page fm_multiselection
+I:Loading page fm_ms_actions
+I:Loading page file_search
+I:Loading page files_redirect
+I:Loading page files_bookmarks_prepare
+I:Loading page files_bookmarks
+I:Loading page filemanageroptions
+I:Loading page openas
+I:Loading page fm_file_checksum
+I:Loading page fm_file_checksum_calc
+I:Loading page fm_file_info
+I:Loading page choosedestinationfolder
+I:Loading page filemanagerrenamefile
+I:Loading page filemanagerrenamefolder
+I:Loading page filemanagerchmod
+I:Loading page filemanagerchmod_key
+I:Loading page filemanagerconfirm
+I:Loading page archive_confirm
+I:Loading page archive_cmd
+I:Loading page filemanageraction
+I:Loading page filemanagercomplete
+I:Loading page cat_file
+I:Including file: /twres/pages/rmmanager.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/rmmanager.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Loading page modules_mount
+I:Loading page modules_unmount
+I:Loading page root_modules
+I:Loading page module_actions
+I:Loading page module_delete
+I:Including file: /twres/pages/advanced.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/advanced.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Loading page advanced
+I:Loading page part_manage
+I:Loading page mod_survival
+I:Loading page mod_factory_rp
+I:Loading page mod_magisk
+I:Loading page mod_unmagisk
+I:Loading page mod_reset
+I:Loading page mod_pass
+I:Loading page mod_kernelsu
+I:Loading page mod_kernelsu_next
+I:Loading page mod_sukisu
+I:Loading page fox_modules
+I:Loading page fox_other_additions
+I:Loading page partsdcard
+I:Loading page terminal
+I:Loading page sideload
+I:Loading page fixcontexts
+I:Loading page apps_load
+I:Loading page apps_list
+I:Unable to open '/tmp/listapps/list'
+I:Unable to open '/tmp/listapps/list'
+I:Including file: /twres/pages/reboot.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/reboot.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Loading page reboot
+I:Loading page set_slot
+I:Including file: /twres/pages/settings.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/settings.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Loading page settings
+I:Loading page ext_context
+I:Loading page ext_general
+I:Loading page pass_select
+I:Loading page ext_screen
+I:Loading page ext_vibrate
+I:Loading page ext_backup
+I:Loading page ext_time
+I:Loading page ext_time_offset
+I:Loading page check_zone
+I:Loading page ext_time_lang
+I:Loading page ext_time_lang_busy
+I:Loading page about
+I:Loading page about_credits
+I:Parsing file: /twres/credits.txt
+I:Parsing file: /twres/translators.txt
+I:Parsing file: /twres/changelog.txt
+I:Loading page ext_gov
+I:Loading page ext_backup_quick
+I:Including file: /twres/pages/universal.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/universal.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Loading page filecheck
+I:Loading page rebootcheck
+I:Loading page rebootcheckoverlay
+I:Loading page no_os_warning
+I:Loading page clear_vars
+I:Loading page confirm_action
+I:Loading page action_page
+I:Loading page ota_simple
+I:Loading page singleaction_page
+I:Loading page action_complete
+I:Including file: /twres/pages/anywhere.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/anywhere.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Loading page lock
+I:Loading page console
+I:Including file: /twres/pages/dialogs.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/dialogs.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Loading page menu
+I:Loading page menu_sort
+I:Loading page fm_sort
+I:Loading page dialog_magisk_not_found
+I:Loading page dialog_modules_cannot_mount
+I:Loading page dialog_reset_average
+I:Loading page dialog_lost_info
+I:Loading page dialog_app
+I:Loading page dialog_error_partition
+I:Loading page pass_error
+I:Loading page dialog_enable_hw_mode
+I:Including file: /twres/pages/customization.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/customization.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Loading page ext_custom_reset
+I:Loading page ext_custom_gest
+I:Loading page ext_custom
+I:Loading page ext_custom_status
+I:Loading page ext_custom_key
+I:Loading page ext_custom_lock
+I:Loading page ext_custom_nav
+I:Loading page ext_custom_other
+I:Loading page ext_custom_nav_error
+I:Loading page ext_custom_nav_no_switch
+I:Loading page ext_custom_fonts_check
+I:Loading page ext_custom_fonts
+I:Loading page ext_custom_fonts_sec
+I:Loading page ext_custom_fonts_size
+I:Loading page ext_custom_fonts_cn
+I:Loading page ext_custom_theme
+I:Loading page ext_custom_splash
+I:Loading page ext_custom_splash_color
+I:Loading page ext_custom_splash_logo
+I:Loading page ext_custom_splash_select
+I:Loading page apply_changes
+I:Loading page apply_splash
+I:Loading page get_splash_info
+I:Including file: /twres/pages/fox.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/fox.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Loading page fox_ota
+I:Loading page fox_ota_lite
+I:Loading page fox_lab
+I:Loading page debug_pages
+I:Loading page debug
+I:Loading page debug_plus
+I:Loading page scaling
+I:Including file: /sbin/maintainer.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/sbin/maintainer.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/dummy.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Loading page maintainer
+I:Switching packages (OrangeFox)
+I:Attempt to load settings from settings file...
+I:InfoManager loading from '/persist/Fox/.foxs'.
+I:Backup folder set to '/data/media/0/Fox/BACKUPS/b362dcbd'
+I:Version number saved to '/cache/recovery/.version'
+I:Unable to mount '/usb_otg'
+I:Actual block device: '', current file system: 'auto'
+I:TWFunc::Set_Brightness: Setting brightness control to 204
+I:PassBak: Found backup
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/en.xml' directly
+parsing languageFile
+parsing languageFile done
+I:Translating partition display names
+I:Backup folder set to '/data/media/0/Fox/BACKUPS/b362dcbd'
+ro.boot.dp=0x20
+ro.boot.hwc=GL
+ro.boot.cpuid=0x0000045b60538f47
+ro.boot.memcg=1
+ro.boot.vbmeta.size=12608
+ro.boot.vbmeta.device=PARTUUID=bd015b30-6c6e-ef21-5072-33caf469fd7b
+ro.boot.vbmeta.digest=97615385cccba927dd690cd4f52719139a511a21556d07c6a2d022464d46ad8d
+ro.boot.vbmeta.hash_alg=sha256
+ro.boot.vbmeta.avb_version=1.2
+ro.boot.vbmeta.device_state=unlocked
+ro.boot.vendor.qspa=true
+ro.boot.cell_id=AEW543C0ETBF8
+ro.boot.dtb_idx=0
+ro.boot.hwlevel=MP
+ro.boot.ramdump=disable
+ro.boot.baseband=msm
+ro.boot.dtbo_idx=0
+ro.boot.hardware=qcom
+ro.boot.hardware.sku=peridot
+ro.boot.hwversion=8.19.0
+ro.boot.keymaster=1
+ro.boot.bootdevice=1d84000.ufshc
+ro.boot.rpmbstatus=19
+ro.boot.secureboot=1
+ro.boot.veritymode=disabled
+ro.boot.veritymode.managed=yes
+ro.boot.boot_devices=soc/1d84000.ufshc
+ro.boot.ptcountrycode=cn
+ro.boot.usbcontroller=a600000.dwc3
+ro.boot.enter_car_diag=0
+ro.boot.verifiedbootstate=orange
+ro.boot.load_modules_parallel=true
+ro.baseband=msm
+ro.bootmode=unknown
+ro.hardware=qcom
+ro.revision=0
+ro.bootloader=unknown
+ro.boottime.adbd=6817231812
+ro.boottime.init=277642828
+ro.boottime.init.modules=5300
+ro.boottime.init.selinux=46797088
+ro.boottime.init.first_stage=6323766150
+ro.boottime.init.cold_boot_wait=97
+ro.boottime.logd=6766889984
+ro.boottime.vendor.ssgtzd=6796595299
+ro.boottime.vendor.boot-qti=6771201963
+ro.boottime.vendor.weaver_nxp=6811135509
+ro.boottime.vendor.secure_element=6806505040
+ro.boottime.vendor.health-recovery=6805018842
+ro.boottime.ueventd=6665402213
+ro.boottime.recovery=6803176237
+ro.boottime.se_omapi=6787548632
+ro.boottime.keystore2=6780871495
+ro.boottime.servicemanager=6776071443
+ro.boottime.hwservicemanager=6774595609
+ro.boottime.vndservicemanager=6777541131
+ro.product.bootimage.name=peridot
+ro.product.bootimage.brand=Redmi
+ro.product.bootimage.model=24069RA21C
+ro.product.bootimage.device=peridot
+ro.product.bootimage.manufacturer=Xiaomi
+ro.bootimage.build.id=UKQ1.240624.001
+ro.bootimage.build.date=Wed Jun 10 03:49:40 UTC 2026
+ro.bootimage.build.date.utc=1781063380
+ro.bootimage.build.tags=release-keys
+ro.bootimage.build.type=user
+ro.bootimage.build.version.sdk=34
+ro.bootimage.build.version.release=14
+ro.bootimage.build.version.incremental=OS3.0.304.0.WNPCNXM
+ro.bootimage.build.version.release_or_codename=14
+ro.bootimage.build.fingerprint=Redmi/peridot/peridot:14/UKQ1.240624.001/OS3.0.304.0.WNPCNXM:user/release-keys
+ro.odm.build.date=Fri Jul 17 22:15:00 UTC 2026
+ro.odm.build.date.utc=1784326500
+ro.product.odm.name=fox_peridot
+ro.product.odm.brand=POCO
+ro.product.odm.model=POCO F6
+ro.product.odm.device=peridot
+ro.product.odm.manufacturer=Xiaomi
+ro.adb.secure=0
+ro.build.id=AP2A.240905.003
+ro.build.date=Fri Jul 17 22:15:00 UTC 2026
+ro.build.date.utc=1784330183
+ro.build.host=runnervm3jd5f
+ro.build.tags=test-keys
+ro.build.type=eng
+ro.build.user=runner
+ro.build.flavor=fox_peridot-eng
+ro.build.display.id=fox_peridot-eng 99.87.36 AP2A.240905.003 eng.runner.20260717.221501 test-keys
+ro.build.product=peridot
+ro.build.version.sdk=34
+ro.build.version.base_os=
+ro.build.version.release=99.87.36
+ro.build.version.codename=REL
+ro.build.version.incremental=eng.runner.20260717.221501
+ro.build.version.preview_sdk=0
+ro.build.version.all_codenames=REL
+ro.build.version.security_patch=2127-12-31
+ro.build.version.release_or_codename=99.87.36
+ro.build.version.preview_sdk_fingerprint=REL
+ro.build.version.min_supported_target_sdk=28
+ro.build.description=fox_peridot-eng 99.87.36 AP2A.240905.003 eng.runner.20260717.221501 test-keys
+ro.build.characteristics=default
+ro.force.debuggable=0
+ro.llndk.api_level=202404
+ro.system.build.date=Fri Jul 17 22:15:00 UTC 2026
+ro.system.build.date.utc=1784326500
+ro.treble.enabled=true
+ro.product.cpu.abi=arm64-v8a
+ro.product.cpu.abilist=arm64-v8a
+ro.product.cpu.pagesize.max=65536
+ro.product.cpu.abilist32=
+ro.product.cpu.abilist64=arm64-v8a
+ro.product.name=fox_peridot
+ro.product.brand=POCO
+ro.product.build.date=Fri Jul 17 22:15:00 UTC 2026
+ro.product.build.date.utc=1784326500
+ro.product.model=POCO F6
+ro.product.device=peridot
+ro.product.system.name=fox_peridot
+ro.product.system.brand=POCO
+ro.product.system.model=POCO F6
+ro.product.system.device=peridot
+ro.product.system.manufacturer=Xiaomi
+ro.product.product.name=fox_peridot
+ro.product.product.brand=POCO
+ro.product.product.model=POCO F6
+ro.product.product.device=peridot
+ro.product.product.manufacturer=Xiaomi
+ro.product.system_ext.name=fox_peridot
+ro.product.system_ext.brand=POCO
+ro.product.system_ext.model=POCO F6
+ro.product.system_ext.device=peridot
+ro.product.system_ext.manufacturer=Xiaomi
+ro.product.manufacturer=Xiaomi
+ro.system_ext.build.date=Fri Jul 17 22:15:00 UTC 2026
+ro.system_ext.build.date.utc=1784326500
+ro.actionable_compatible_property.enabled=true
+ro.board.api_level=202404
+ro.board.api_frozen=true
+ro.board.first_api_level=34
+ro.vendor.build.date=Fri Jul 17 22:15:00 UTC 2026
+ro.vendor.build.date.utc=1784326500
+ro.vendor.product.cpu.abilist=arm64-v8a
+ro.vendor.product.cpu.abilist32=
+ro.vendor.product.cpu.abilist64=arm64-v8a
+ro.vendor.api_level=34
+ro.product.board=peridot
+ro.product.vendor.name=fox_peridot
+ro.product.vendor.brand=POCO
+ro.product.vendor.model=POCO F6
+ro.product.vendor.device=peridot
+ro.product.vendor.manufacturer=Xiaomi
+ro.product.first_api_level=34
+ro.cold_boot_done=true
+ro.bionic.arch=arm64
+ro.bionic.2nd_arch=arm
+ro.bionic.cpu_variant=kryo
+ro.bionic.2nd_cpu_variant=kryo
+ro.dalvik.vm.native.bridge=0
+ro.dalvik.vm.enable_uffd_gc=true
+ro.zygote=zygote64
+dalvik.vm.isa.arm.variant=kryo
+dalvik.vm.isa.arm.features=default
+dalvik.vm.isa.arm64.variant=kryo
+dalvik.vm.isa.arm64.features=default
+dalvik.vm.dexopt.secondary=true
+dalvik.vm.dexopt.thermal-cutoff=2
+dalvik.vm.usejit=true
+dalvik.vm.madvise.artfile.size=4294967295
+dalvik.vm.madvise.odexfile.size=104857600
+dalvik.vm.madvise.vdexfile.size=104857600
+dalvik.vm.lockprof.threshold=500
+dalvik.vm.dex2oat64.enabled=true
+dalvik.vm.dex2oat-Xms=64m
+dalvik.vm.dex2oat-Xmx=512m
+dalvik.vm.minidebuginfo=true
+dalvik.vm.useartservice=true
+dalvik.vm.appimageformat=lz4
+dalvik.vm.disable-odrefresh=true
+dalvik.vm.image-dex2oat-Xms=64m
+dalvik.vm.image-dex2oat-Xmx=64m
+dalvik.vm.usap_pool_enabled=false
+dalvik.vm.usap_pool_size_max=3
+dalvik.vm.usap_pool_size_min=1
+dalvik.vm.image-dex2oat-filter=extract
+dalvik.vm.dex2oat-minidebuginfo=true
+dalvik.vm.usap_refill_threshold=1
+dalvik.vm.usap_pool_refill_delay_ms=3000
+dalvik.vm.disable-art-service-dexopt=true
+dalvik.vm.dex2oat-max-image-block-size=524288
+dalvik.vm.dex2oat-resolve-startup-strings=true
+persist.sys.dalvik.vm.lib.2=libart.so
+debug.atrace.tags.enableflags=0
+ro.product.debugfs_restrictions.enabled=true
+ro.twrp.target.devices=peridot
+ro.twrp.fastbootd=0
+ro.wifi.channels=
+ro.allow.mock.location=1
+ro.build.date.utc_fox=1784330183
+ro.build.fox_id=978f194b-9128-4610-b96f-ce00caff03b8
+ro.build.selinux=1
+ro.build.version.known_codenames=Base,Base11,Cupcake,Donut,Eclair,Eclair01,EclairMr1,Froyo,Gingerbread,GingerbreadMr1,Honeycomb,HoneycombMr1,HoneycombMr2,IceCreamSandwich,IceCreamSandwichMr1,JellyBean,JellyBeanMr1,JellyBeanMr2,Kitkat,KitkatWatch,Lollipop,LollipopMr1,M,N,NMr1,O,OMr1,P,Q,R,S,Sv2,Tiramisu,UpsideDownCake,VanillaIceCream
+ro.build.version.release_or_preview_display=14
+ro.build.fox_codebase=2026-06-13 (fd98f33a)
+ro.kernel.android.checkjni=1
+ro.kernel.version=6.1
+ro.system.product.cpu.abilist=arm64-v8a
+ro.system.product.cpu.abilist32=
+ro.system.product.cpu.abilist64=arm64-v8a
+ro.dynamic.full_size=9126805504
+ro.product.bootimage.cert=24069RA21C
+ro.product.bootimage.marketname=Redmi Turbo 3
+ro.bootimage.build.date.utc_fox=1784330183
+ro.fastbootd.available=1
+ro.orangefox.boot=1
+ro.orangefox.boot.header.version=4
+ro.orangefox.type=Stable
+ro.orangefox.build=orangefox
+ro.orangefox.release.version=R12.0_5
+ro.orangefox.vanilla=1
+ro.orangefox.variant=crypto
+ro.orangefox.virtual_ab=1
+ro.orangefox.crypto_enabled=1
+ro.orangefox.substitute_permissions=1
+ro.postinstall.fstab.prefix=/system
+fbe.contents=aes-256-xts
+fbe.metadata.wrappedkey=true
+fbe.filenames=aes-256-cts:v2+inlinecrypt_optimized+wrappedkey_v0
+init.svc_debug.no_fatal.zygote=true
+twrp.modules.loaded=true
+fstab.additional=1
+metadata.contents=aes-256-xts
+metadata.filenames=wrappedkey_v0
+orangefox.super.partition=true
+orangefox.crash_counter=0
+orangefox.support_kernelsu=true
+keymaster_ver=4.x
+tw_boot_header_version=4
+ro.product.build.16k_page.enabled=false
+ro.apex.updatable=true
+ro.boot.product.hardware.sku=peridot
+ro.boot.slot_suffix=_b
+ro.boot.fstab_suffix=default
+ro.boot.dynamic_partitions=true
+ro.hwui.use_vulkan=
+ro.board.platform=pineapple
+ro.build.ab_update=true
+pm.dexopt.ab-ota=speed-profile
+pm.dexopt.shared=speed
+pm.dexopt.cmdline=verify
+pm.dexopt.install=speed-profile
+pm.dexopt.inactive=verify
+pm.dexopt.bg-dexopt=speed-profile
+pm.dexopt.post-boot=verify
+pm.dexopt.first-boot=verify
+pm.dexopt.install-bulk=speed-profile
+pm.dexopt.install-fast=skip
+pm.dexopt.boot-after-ota=verify
+pm.dexopt.install-bulk-secondary=verify
+pm.dexopt.install-bulk-downgraded=verify
+pm.dexopt.boot-after-mainline-update=verify
+pm.dexopt.install-bulk-secondary-downgraded=verify
+sys.usb.ffs.ready=1
+ro.build.fingerprint=POCO/fox_peridot/peridot:99.87.36/AP2A.240905.003/eng.runner.20260717.221501:eng/test-keys
+ro.gsid.image_running=0
+gsid.image_installed=0
+hwservicemanager.ready=true
+ro.boot.hypervisor.protected_vm.supported=false
+init.svc.logd=running
+init.svc.ueventd=running
+init.svc.recovery=running
+init.svc.se_omapi=running
+init.svc.keystore2=running
+init.svc.servicemanager=running
+init.svc.hwservicemanager=running
+init.svc.vndservicemanager=running
+init.svc.adbd=restarting
+init.svc_debug_pid.adbd=365
+init.svc_debug_pid.logd=303
+init.svc_debug_pid.vendor.ssgtzd=319
+init.svc_debug_pid.vendor.boot-qti=304
+init.svc_debug_pid.vendor.weaver_nxp=341
+init.svc_debug_pid.vendor.secure_element=326
+init.svc_debug_pid.vendor.health-recovery=325
+init.svc_debug_pid.ueventd=293
+init.svc_debug_pid.recovery=324
+init.svc_debug_pid.se_omapi=312
+init.svc_debug_pid.keystore2=311
+init.svc_debug_pid.servicemanager=309
+init.svc_debug_pid.hwservicemanager=305
+init.svc_debug_pid.vndservicemanager=310
+keystore.crash_count=0
+ro.logd.kernel=true
+logd.ready=true
+ro.vendor.build.ab_ota_partitions=boot,dtbo,init_boot,odm,product,system,system_dlkm,system_ext,vbmeta,vbmeta_system,vendor,vendor_boot,vendor_dlkm
+ro.product.ab_ota_partitions=boot,dtbo,init_boot,odm,product,system,system_dlkm,system_ext,vbmeta,vbmeta_system,vendor,vendor_boot,vendor_dlkm
+persist.debug.dalvik.vm.core_platform_api_policy=just-warn
+ro.property_service.version=2
+ro.minui.pixel_format=RGBX_8888
+ro.minui.overscan_percent=0
+ro.recovery.usb.adb.pid=D001
+ro.recovery.usb.vid=18D1
+ro.recovery.usb.fastboot.pid=4EE0
+ro.boot.serialno=b362dcbd
+ro.serialno=b362dcbd
+servicemanager.ready=true
+service.adb.root=1
+external_storage.projid.enabled=1
+external_storage.casefold.enabled=1
+external_storage.sdcardfs.enabled=0
+dev.mnt.blk.firmware=sde35
+dev.mnt.dev.firmware=sde35
+dev.mnt.rootdisk.firmware=sde
+net.bt.name=Android
+persist.sys.usb.config=adb
+persist.sys.fuse.passthrough.enable=true
+persist.sys.disable_rescue=true
+persist.sys.timezone=GMT0;BST,M3.5.0,M10.5.0
+persist.traced.enable=1
+sys.usb.mtp.batchcancel=1
+sys.usb.mtp.device_type=3
+sys.usb.state=adb
+sys.usb.config=adb
+sys.usb.configfs=1
+sys.usb.controller=a600000.dwc3
+ro.secure=0
+ro.debuggable=1
+ro.odm.product.cpu.abilist=arm64-v8a
+ro.odm.product.cpu.abilist32=
+ro.odm.product.cpu.abilist64=arm64-v8a
+init.svc.vendor.ssgtzd=running
+init.svc.vendor.boot-qti=running
+init.svc.vendor.weaver_nxp=running
+init.svc.vendor.secure_element=restarting
+init.svc.vendor.health-recovery=running
+ro.vendor.build.security_patch=2127-12-31
+ro.virtual_ab.enabled=true
+ro.virtual_ab.io_uring.enabled=true
+ro.virtual_ab.userspace.snapshots.enabled=true
+ro.virtual_ab.compression.xor.enabled=true
+ro.virtual_ab.compression.enabled=true
+ro.virtual_ab.batch_writes=true
+
+I:Overriding ro.build.date.utc with value: "0"
+I:Overriding ro.bootimage.build.date.utc with value: "0"
+I:Overriding ro.vendor.build.date.utc with value: "0"
+I:Overriding ro.system.build.date.utc with value: "0"
+I:Overriding ro.system_ext.build.date.utc with value: "0"
+I:Overriding ro.product.build.date.utc with value: "0"
+I:Overriding ro.odm.build.date.utc with value: "0"
+I:DEBUG: OrangeFox: running the startup script...
+FOX_BUILD_DATE=Fri Jul 17 23:16:23 2026
+DEBUG: OrangeFox: FOX_DEVICE=peridot
+DEBUG: OrangeFox: FOX_KERNEL=6.1.138-android14-11-ga3b9c44908dd-ab13320413+
+DEBUG: OrangeFox: SYSTEM_ROOT=0
+DEBUG: OrangeFox: PROPER_SAR=0
+DEBUG: OrangeFox: FOX_SCRIPT_DATE=20260324
+DEBUG: OrangeFox: error - I cannot find the system build.prop
+DEBUG: OrangeFox: can't identify the ROM
+DEBUG: OrangeFox: Fox properties:
+[orangefox.crash_counter]: [0]
+[orangefox.postinit.status]: [1]
+[orangefox.product.partition]: [0]
+[orangefox.super.block_device]: [/dev/block/by-name/super]
+[orangefox.super.mount_point]: [/super]
+[orangefox.super.partition]: [true]
+[orangefox.support_kernelsu]: [true]
+[ro.orangefox.boot]: [1]
+[ro.orangefox.boot.header.version]: [4]
+[ro.orangefox.build]: [orangefox]
+[ro.orangefox.crypto_enabled]: [1]
+[ro.orangefox.home]: [/persist/Fox]
+[ro.orangefox.kernel]: [6.1.138-android14-11-ga3b9c44908dd-ab13320413+]
+[ro.orangefox.release.version]: [R12.0_5]
+[ro.orangefox.sar]: [0]
+[ro.orangefox.settings]: [/persist/Fox]
+[ro.orangefox.substitute_permissions]: [1]
+[ro.orangefox.type]: [Stable]
+[ro.orangefox.vanilla]: [1]
+[ro.orangefox.variant]: [crypto]
+[ro.orangefox.virtual_ab]: [1]
+I:Process ended with no errors.
+I:Is_Mounted: Unable to find partition for path '/system_root'
+Unable to find partition for path '/system_root'
+I:Is_Mounted: Unable to find partition for path '/system_root'
+Unable to find partition for path '/system_root'
+I:Is_Mounted: Unable to find partition for path '/system_root'
+Unable to find partition for path '/system_root'
+I:Is_Mounted: Unable to find partition for path '/system_root'
+Unable to find partition for path '/system_root'
+I:- ROM fingerprint not available
+I:---runatboot.sh start---
+I:Goodix touchscreen sysfs not present; skipping reset...
+I:---runatboot.sh end---
+I:Process ended with no errors.
+copying '/data/misc/keystore/persistent.sqlite' to '/tmp/misc/keystore/persistent.sqlite'
+SELinux contexts loaded from /file_contexts
+Full SELinux support is present.
+I:Switching packages (OrangeFox)
+
+
+Partition Logs:
+/misc | /dev/block/sda12 | Size: 4MB
+   Flags: IsPresent 
+   Primary_Block_Device: /dev/block/sda12
+   Display_Name: misc
+   Storage_Name: misc
+   Backup_Path: /misc
+   Backup_Name: misc
+   Backup_Display_Name: misc
+   Storage_Path: /misc
+   Current_File_System: emmc
+   Fstab_File_System: emmc
+   Backup_Method: dd
+
+/persist | /dev/block/sdf7 | Size: 26MB Used: 7MB Free: 19MB Backup Size: 7MB
+   Flags: Can_Be_Mounted Can_Be_Wiped IsPresent 
+   Primary_Block_Device: /dev/block/sdf7
+   Display_Name: Persist
+   Storage_Name: persist
+   Backup_Path: /persist
+   Backup_Name: persist
+   Backup_Display_Name: persist
+   Storage_Path: /persist
+   Current_File_System: ext4
+   Fstab_File_System: ext4
+   Backup_Method: files
+   Mount_Flags: 1030, Mount_Options: barrier=1
+
+/cache | /dev/block/sda29 | Size: 95MB Used: 0MB Free: 95MB Backup Size: 0MB
+   Flags: Can_Be_Mounted Can_Be_Wiped Can_Be_Backed_Up Wipe_During_Factory_Reset Wipe_Available_in_GUI IsPresent 
+   Primary_Block_Device: /dev/block/sda29
+   Display_Name: Cache
+   Storage_Name: Cache
+   Backup_Path: /cache
+   Backup_Name: cache
+   Backup_Display_Name: Cache
+   Storage_Path: /cache
+   Current_File_System: ext4
+   Fstab_File_System: ext4
+   Backup_Method: files
+   Mount_Flags: 1030, Mount_Options: barrier=1
+
+/bluetooth | /dev/block/bootdevice/by-name/bluetooth_b | Size: 63MB Used: 1MB Free: 62MB Backup Size: 1MB
+   Flags: Can_Be_Mounted Can_Be_Wiped IsPresent SlotSelect Mount_Read_Only 
+   Primary_Block_Device: /dev/block/bootdevice/by-name/bluetooth
+   Display_Name: Bluetooth
+   Storage_Name: Bluetooth
+   Backup_Path: /bluetooth
+   Backup_Name: bluetooth
+   Backup_Display_Name: Bluetooth
+   Storage_Path: /bluetooth
+   Current_File_System: vfat
+   Fstab_File_System: vfat
+   Backup_Method: files
+   Mount_Flags: 0, Mount_Options: shortname=lower,uid=1002,gid=3002,dmask=227,fmask=337,context=u:object_r:bt_firmware_file:s0 wait
+
+/bluetooth_image | /dev/block/bootdevice/by-name/bluetooth_b | Size: 4MB
+   Flags: Can_Be_Backed_Up Is_SubPartition IsPresent SlotSelect 
+   SubPartition_Of: /modem_img
+   Primary_Block_Device: /dev/block/bootdevice/by-name/bluetooth
+   Display_Name: Bluetooth
+   Storage_Name: Bluetooth
+   Backup_Path: /bluetooth_image
+   Backup_Name: bluetooth_image
+   Backup_Display_Name: Bluetooth
+   Storage_Path: /bluetooth_image
+   Current_File_System: emmc
+   Fstab_File_System: emmc
+   Backup_Method: dd
+
+/boot | /dev/block/bootdevice/by-name/boot_b | Size: 96MB
+   Flags: Can_Be_Backed_Up IsPresent Can_Flash_Img SlotSelect 
+   Primary_Block_Device: /dev/block/bootdevice/by-name/boot
+   Display_Name: Boot
+   Storage_Name: Boot
+   Backup_Path: /boot
+   Backup_Name: boot
+   Backup_Display_Name: Boot
+   Storage_Path: /boot
+   Current_File_System: emmc
+   Fstab_File_System: emmc
+   Backup_Method: dd
+
+/dsp | /dev/block/bootdevice/by-name/dsp_b | Size: 58MB Used: 33MB Free: 25MB Backup Size: 33MB
+   Flags: Can_Be_Mounted Can_Be_Wiped IsPresent SlotSelect 
+   Primary_Block_Device: /dev/block/bootdevice/by-name/dsp
+   Display_Name: DSP
+   Storage_Name: DSP
+   Backup_Path: /dsp
+   Backup_Name: dsp
+   Backup_Display_Name: DSP
+   Storage_Path: /dsp
+   Current_File_System: ext4
+   Fstab_File_System: vfat
+   Backup_Method: files
+
+/dsp_image | /dev/block/bootdevice/by-name/dsp_b | Size: 64MB
+   Flags: Can_Be_Backed_Up Is_SubPartition IsPresent SlotSelect 
+   SubPartition_Of: /modem_img
+   Primary_Block_Device: /dev/block/bootdevice/by-name/dsp
+   Display_Name: DSP
+   Storage_Name: DSP
+   Backup_Path: /dsp_image
+   Backup_Name: dsp_image
+   Backup_Display_Name: DSP
+   Storage_Path: /dsp_image
+   Current_File_System: emmc
+   Fstab_File_System: emmc
+   Backup_Method: dd
+
+/dtbo | /dev/block/bootdevice/by-name/dtbo_b | Size: 24MB
+   Flags: Can_Be_Backed_Up IsPresent Can_Flash_Img SlotSelect 
+   Primary_Block_Device: /dev/block/bootdevice/by-name/dtbo
+   Display_Name: DTBO
+   Storage_Name: DTBO
+   Backup_Path: /dtbo
+   Backup_Name: dtbo
+   Backup_Display_Name: DTBO
+   Storage_Path: /dtbo
+   Current_File_System: emmc
+   Fstab_File_System: emmc
+   Backup_Method: dd
+
+/efs1 | /dev/block/sdf3 | Size: 8MB
+   Flags: Can_Be_Backed_Up Has_SubPartition IsPresent 
+   Primary_Block_Device: /dev/block/sdf3
+   Display_Name: EFS (IMEI)
+   Storage_Name: EFS (IMEI)
+   Backup_Path: /efs1
+   Backup_Name: efs1
+   Backup_Display_Name: EFS (IMEI)
+   Storage_Path: /efs1
+   Current_File_System: emmc
+   Fstab_File_System: emmc
+   Backup_Method: dd
+
+/efs2 | /dev/block/sdf4 | Size: 8MB
+   Flags: Can_Be_Backed_Up Is_SubPartition IsPresent 
+   SubPartition_Of: /efs1
+   Primary_Block_Device: /dev/block/sdf4
+   Display_Name: efs2
+   Storage_Name: efs2
+   Backup_Path: /efs2
+   Backup_Name: efs2
+   Backup_Display_Name: efs2
+   Storage_Path: /efs2
+   Current_File_System: emmc
+   Fstab_File_System: emmc
+   Backup_Method: dd
+
+/efsc | /dev/block/sdf6 | Size: 1MB
+   Flags: Can_Be_Backed_Up Is_SubPartition IsPresent 
+   SubPartition_Of: /efs1
+   Primary_Block_Device: /dev/block/sdf6
+   Display_Name: efsc
+   Storage_Name: efsc
+   Backup_Path: /efsc
+   Backup_Name: efsc
+   Backup_Display_Name: efsc
+   Storage_Path: /efsc
+   Current_File_System: emmc
+   Fstab_File_System: emmc
+   Backup_Method: dd
+
+/efsg | /dev/block/sdf5 | Size: 8MB
+   Flags: Can_Be_Backed_Up Is_SubPartition IsPresent 
+   SubPartition_Of: /efs1
+   Primary_Block_Device: /dev/block/sdf5
+   Display_Name: efsg
+   Storage_Name: efsg
+   Backup_Path: /efsg
+   Backup_Name: efsg
+   Backup_Display_Name: efsg
+   Storage_Path: /efsg
+   Current_File_System: emmc
+   Fstab_File_System: emmc
+   Backup_Method: dd
+
+/init_boot | /dev/block/bootdevice/by-name/init_boot_b | Size: 8MB
+   Flags: Can_Be_Backed_Up IsPresent Can_Flash_Img SlotSelect 
+   Primary_Block_Device: /dev/block/bootdevice/by-name/init_boot
+   Display_Name: Init Boot
+   Storage_Name: Init Boot
+   Backup_Path: /init_boot
+   Backup_Name: init_boot
+   Backup_Display_Name: Init Boot
+   Storage_Path: /init_boot
+   Current_File_System: emmc
+   Fstab_File_System: emmc
+   Backup_Method: dd
+
+/modem | /dev/block/bootdevice/by-name/modem_b | Size: 201MB Used: 155MB Free: 46MB Backup Size: 155MB
+   Flags: Can_Be_Mounted Can_Be_Wiped IsPresent SlotSelect Mount_Read_Only 
+   Primary_Block_Device: /dev/block/bootdevice/by-name/modem
+   Display_Name: Modem
+   Storage_Name: Modem
+   Backup_Path: /modem
+   Backup_Name: modem
+   Backup_Display_Name: Modem
+   Storage_Path: /modem
+   Current_File_System: vfat
+   Fstab_File_System: vfat
+   Backup_Method: files
+   Mount_Flags: 0, Mount_Options: shortname=lower,uid=1000,gid=1000,dmask=227,fmask=337,context=u:object_r:firmware_file:s0 wait
+
+/modem_img | /dev/block/bootdevice/by-name/modem_b | Size: 202MB
+   Flags: Can_Be_Backed_Up Has_SubPartition IsPresent SlotSelect 
+   Primary_Block_Device: /dev/block/bootdevice/by-name/modem
+   Display_Name: Modem
+   Storage_Name: Modem
+   Backup_Path: /modem_img
+   Backup_Name: modem_img
+   Backup_Display_Name: Modem
+   Storage_Path: /modem_img
+   Current_File_System: emmc
+   Fstab_File_System: emmc
+   Backup_Method: dd
+
+/persist_image | /dev/block/sdf7 | Size: 32MB
+   Flags: Can_Be_Backed_Up IsPresent 
+   Primary_Block_Device: /dev/block/sdf7
+   Display_Name: Persist
+   Storage_Name: Persist
+   Backup_Path: /persist_image
+   Backup_Name: persist_image
+   Backup_Display_Name: Persist
+   Storage_Path: /persist_image
+   Current_File_System: emmc
+   Fstab_File_System: emmc
+   Backup_Method: dd
+
+/recovery | /dev/block/bootdevice/by-name/recovery_b | Size: 100MB
+   Flags: Can_Be_Backed_Up IsPresent Can_Flash_Img SlotSelect 
+   Primary_Block_Device: /dev/block/bootdevice/by-name/recovery
+   Display_Name: Recovery
+   Storage_Name: Recovery
+   Backup_Path: /recovery
+   Backup_Name: recovery
+   Backup_Display_Name: Recovery
+   Storage_Path: /recovery
+   Current_File_System: emmc
+   Fstab_File_System: emmc
+   Backup_Method: dd
+
+/storage | /data/media/0 | Size: 492933MB Used: 102385MB Free: 288764MB Backup Size: 102385MB
+   Flags: Can_Be_Mounted Can_Be_Wiped Use_Rm_Rf Can_Be_Backed_Up Removable IsPresent 
+   Primary_Block_Device: /data/media/0
+   Display_Name: Internal Storage
+   Storage_Name: Internal Storage
+   Backup_Path: /storage
+   Backup_Name: storage
+   Backup_Display_Name: Internal Storage
+   Storage_Path: /storage
+   Current_File_System: auto
+   Fstab_File_System: auto
+   Backup_Method: files
+   Mount_Flags: 4096, Mount_Options: utf8
+
+/usb_otg |  | Size: 0MB Used: 0MB Free: 0MB Backup Size: 0MB
+   Flags: Can_Be_Mounted Can_Be_Wiped Wipe_Available_in_GUI Removable Is_Storage 
+   Primary_Block_Device: /dev/block/sdg1
+   Alternate_Block_Device: /dev/block/sdg4
+   Display_Name: USB-Storage
+   Storage_Name: USB-Storage
+   Backup_Path: /usb_otg
+   Backup_Name: usb_otg
+   Backup_Display_Name: USB-Storage
+   Storage_Path: /usb_otg
+   Current_File_System: auto
+   Fstab_File_System: auto
+   Backup_Method: files
+   Mount_Flags: 0, Mount_Options: utf8
+   MTP_Storage_ID: 65537
+
+/vbmeta | /dev/block/bootdevice/by-name/vbmeta_b | Size: 0MB
+   Flags: Can_Be_Backed_Up IsPresent SlotSelect 
+   Primary_Block_Device: /dev/block/bootdevice/by-name/vbmeta
+   Display_Name: VBMeta
+   Storage_Name: VBMeta
+   Backup_Path: /vbmeta
+   Backup_Name: vbmeta
+   Backup_Display_Name: VBMeta
+   Storage_Path: /vbmeta
+   Current_File_System: emmc
+   Fstab_File_System: emmc
+   Backup_Method: dd
+
+/vbmeta_system | /dev/block/bootdevice/by-name/vbmeta_system_b | Size: 0MB
+   Flags: Can_Be_Backed_Up IsPresent SlotSelect 
+   Primary_Block_Device: /dev/block/bootdevice/by-name/vbmeta_system
+   Display_Name: VBMeta System
+   Storage_Name: VBMeta System
+   Backup_Path: /vbmeta_system
+   Backup_Name: vbmeta_system
+   Backup_Display_Name: VBMeta System
+   Storage_Path: /vbmeta_system
+   Current_File_System: emmc
+   Fstab_File_System: emmc
+   Backup_Method: dd
+
+/vendor_boot | /dev/block/bootdevice/by-name/vendor_boot_b | Size: 96MB
+   Flags: Can_Be_Backed_Up IsPresent Can_Flash_Img SlotSelect 
+   Primary_Block_Device: /dev/block/bootdevice/by-name/vendor_boot
+   Display_Name: Vendor Boot
+   Storage_Name: Vendor Boot
+   Backup_Path: /vendor_boot
+   Backup_Name: vendor_boot
+   Backup_Display_Name: Vendor Boot
+   Storage_Path: /vendor_boot
+   Current_File_System: emmc
+   Fstab_File_System: emmc
+   Backup_Method: dd
+
+/metadata | /dev/block/sda21 | Size: 61MB Used: 38MB Free: 23MB Backup Size: 38MB
+   Flags: Can_Be_Mounted Can_Be_Wiped Wipe_Available_in_GUI IsPresent 
+   Primary_Block_Device: /dev/block/sda21
+   Display_Name: Metadata
+   Storage_Name: Metadata
+   Backup_Path: /metadata
+   Backup_Name: metadata
+   Backup_Display_Name: Metadata
+   Storage_Path: /metadata
+   Current_File_System: f2fs
+   Fstab_File_System: f2fs
+   Backup_Method: files
+   Mount_Flags: 1030, Mount_Options: discard
+
+/data | /dev/block/sda31 | Size: 492933MB Used: 75093MB Free: 288764MB Backup Size: 75093MB
+   Flags: Can_Be_Mounted Can_Be_Wiped Can_Be_Backed_Up Wipe_During_Factory_Reset Wipe_Available_in_GUI IsPresent Can_Be_Encrypted Is_Encrypted Is_Decrypted Has_Data_Media Can_Encrypt_Backup Use_Userdata_Encryption Is_Storage Is_Settings_Storage 
+   Symlink_Path: /data/media/0
+   Symlink_Mount_Point: /sdcard
+   Primary_Block_Device: /dev/block/sda31
+   Display_Name: Data
+   Storage_Name: Internal Storage
+   Backup_Path: /data
+   Backup_Name: data
+   Backup_Display_Name: Data
+   Storage_Path: /data/media/0
+   Current_File_System: f2fs
+   Fstab_File_System: mifs
+   Backup_Method: files
+   Mount_Flags: 1030, Mount_Options: discard,reserve_root=32768,resgid=1065,fsync_mode=nobarrier,inlinecrypt,gc_merge,compress_mode=user,compress_cache,atgc,age_extent_cache
+   MTP_Storage_ID: 65538
+   Metadata Key Directory: /metadata/vold/metadata_encryption
+
+/super | /dev/block/by-name/super | Size: 0MB
+   Flags: Can_Be_Backed_Up IsPresent Can_Flash_Img 
+   Alternate_Block_Device: /dev/block/by-name/super
+   Display_Name: super
+   Backup_Path: /super
+   Backup_Name: super
+   Backup_Display_Name: Super (system system system_ext system_ext)
+   Current_File_System: emmc
+   Backup_Method: dd
+
+--------------------------
+Welcome to OrangeFox Recovery!
+[Release]   : R12.0_5
+[Variant]   : crypto
+[Codebase]  : 34, 2026-06-13 (fd98f33a)
+[Branch]    : fox_14.1
+[Settings]  : /persist/Fox
+[Misc]      : /persist/Fox
+[Build date]: Fri Jul 17 23:16:23 2026
+[Build type]: Stable
+[Support]   : https://t.me/OrangeFoxChat
+
+OrangeFox websites:
+[Downloads] : https://orangefox.download/
+[Guides/FAQ]: https://wiki.orangefox.tech/guides/
+--------------------------
+I:DEBUG: OrangeFox: the startup script has been executed.
+I:Is_Mounted: Unable to find partition for path '/system_root'
+Unable to find partition for path '/system_root'
+I:Is_Mounted: Unable to find partition for path '/system_root'
+Unable to find partition for path '/system_root'
+* Storage is not encrypted
+* Platform:   pineapple
+* Display:    qcom,mdss dsi n16t 42 02 0a dsc vid 
+* Device:     peridot (peridot)
+* Dynamic:    yes
+* Boot slot:  _b
+* Virtual_AB: yes
+* Kernel:     6.1.138-android14-11-ga3b9c44908dd-ab13320413+
+I:Is_Mounted: Unable to find partition for path '/system_root'
+Unable to find partition for path '/system_root'
+I:Is_Mounted: Unable to find partition for path '/system_root'
+Unable to find partition for path '/system_root'
+I:Is_Mounted: Unable to find partition for path '/system_root'
+Unable to find partition for path '/system_root'
+I:Is_Mounted: Unable to find partition for path '/system_root'
+Unable to find partition for path '/system_root'
+* No ROM.
+--------------------------
+I:Is_Mounted: Unable to find partition for path '/system_root'
+Unable to find partition for path '/system_root'
+I:Is_Mounted: Unable to find partition for path '/system_root'
+Unable to find partition for path '/system_root'
+I:Is_Mounted: Unable to find partition for path '/system_root'
+Unable to find partition for path '/system_root'
+I:Is_Mounted: Unable to find partition for path '/system_root'
+Unable to find partition for path '/system_root'
+I:ROM Status: Is not installed
+I:ADB & MTP disabled by maintainer
+I:Switching packages (OrangeFox)
+I:Set page: 'main'
+I:Set overlay: ''
+I:Starting Adb Backup FIFO
+I:Set page: 'clear_vars'
+I:Set page: 'ext_custom_status'
+I:Request to switch GUI control mode
+I:operation_start: 'ADB'
+I:Set overlay: 'dialog_enable_hw_mode'
+I:operation_end - status=0
+I:Set page: 'password_enter'
+I:Set page: 'password_enter_num'
+I:Set overlay: 'apply_changes'
+I:PassBak: Created backup
+I:InfoManager saving '/persist/Fox/.foxs'
+I:Saved settings file values to '/persist/Fox/.foxs'
+I:Loading package: OrangeFox (/persist/Fox/theme/ui.zip)
+I:Loading zip theme
+I:Failed to load package '/persist/Fox/theme/ui.zip'.
+I:Attempting to reload stock theme...
+I:Loading package: OrangeFox (/twres/ui.xml)
+I:Load XML directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/zn_TW.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/zh_TW.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/zh_CN.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/vi_VN.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/uk_UA.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/tr_TR.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/th_TH.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/sr_Cyrl.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/ru_RU.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/ru.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/ro_RO.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/pt_PT.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/pt_BR.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/pl_PL.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/no_NO.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/nl_NL.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/ko_KR.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/ja_JP.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/it_IT.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/id_ID.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/hu_HU.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/hu.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/hi_IN.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/he_IL.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/fr_FR.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/fa_IR.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/es_ES.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/es-ES.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/en.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/el_GR.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/de_DE.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/cs_CZ.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/ca_ES.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/bn_BD.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/bg_BG.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/ar_SA.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/languages/en.xml' directly
+parsing languageFile
+parsing languageFile done
+I:PageManager::LoadFileToBuffer loading filename: '/twres/ui.xml' directly
+I:Checking resolution...
+I:Scaling theme width 1.129630x and height 1.130000x, offsets x: 0 y: 0 w: 0 h: 0
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Including file: /persist/Fox/.navbar/navbar.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/persist/Fox/.navbar/navbar.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Including file: /persist/Fox/.theme/font.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/persist/Fox/.theme/font.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/themes/font.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Including file: /persist/Fox/.theme/style.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/persist/Fox/.theme/style.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/themes/style.xml' directly
+I:Loading resources...
+I:Failed to load image from Light/Progress/indeterminate033, error -1
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Including file: /persist/Fox/.theme/accent.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/persist/Fox/.theme/accent.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/themes/accent.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Including file: /twres/resources/vars.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/resources/vars.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Including file: /twres/resources/images.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/resources/images.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Including file: /twres/resources/styles.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/resources/styles.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Including file: /twres/pages/templates/base.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/templates/base.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Including file: /twres/pages/templates/keyboard.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/templates/keyboard.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Including file: /twres/pages/templates/navbar.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/templates/navbar.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Including file: /twres/pages/templates/statusbar.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/templates/statusbar.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Including file: /twres/pages/templates/templates.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/templates/templates.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Including file: /twres/pages/main.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/main.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Loading page main
+I:Loading page navbar
+I:Loading page welcome
+I:Loading page aroma_busy
+I:Loading page fastboot
+I:Including file: /twres/pages/pass.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/pass.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Loading page password_enter
+I:Loading page password_enter_num
+I:Loading page password_enter_pattern
+I:Loading page password_check
+I:Loading page pass_pattern
+I:Loading page pass_pattern_2
+I:Loading page pass_text
+I:Loading page pass_text_2
+I:Loading page pass_pin
+I:Loading page pass_pin_2
+I:Loading page pass_remove
+I:Loading page pass_check
+I:Including file: /twres/pages/install.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/install.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Loading page flash_confirm
+I:Loading page fox_modules_confirm
+I:Loading page queueview
+I:Loading page flash_image_confirm
+I:Loading page flash_image_ab
+I:Loading page add_zip
+I:Loading page flash_zip
+I:Loading page flash_image
+I:Loading page flash_done
+I:Loading page flash_sleep_and_reboot
+I:Loading page flash_image_done
+I:Including file: /twres/pages/wipe.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/wipe.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Loading page wipe
+I:Loading page formatdata
+I:Loading page formatdata_confirm
+I:Loading page wipe_confirm_action
+I:Loading page wipe_action_page
+I:Loading page wipe_action_complete
+I:Loading page checkpartitionlist
+I:Loading page partitionoptions
+I:Loading page refreshfilesystem
+I:Loading page selectfilesystem
+I:Loading page part_options
+I:Including file: /twres/pages/backup.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/backup.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Loading page backup
+I:Loading page check_storage_back
+I:Loading page backup_prep
+I:Loading page backupname
+I:Loading page backupname_auto
+I:Loading page backup_encryption
+I:Loading page backup_encryption2
+I:Loading page checkbackuppassword
+I:Loading page checkbackuppassword2
+I:Loading page backup_run
+I:Loading page backup_digest
+I:Loading page backup_action_complete
+I:Including file: /twres/pages/restore.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/restore.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Loading page restore
+I:Loading page restore_prep
+I:Loading page restore_read
+I:Loading page restore_decrypt
+I:Loading page try_restore_decrypt
+I:Loading page restore_select
+I:Loading page renamebackup
+I:Loading page deletebackup
+I:Loading page restore_run
+I:Loading page restore_confirm_action
+I:Loading page restore_action_page
+I:Loading page restore_action_complete
+I:Including file: /twres/pages/mount.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/mount.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Loading page mount
+I:Loading page usb_mount
+I:Loading page system_readonly_check
+I:Loading page system_readonly_check_ext_context
+I:Loading page system_readonly
+I:Loading page system_readonly_mount
+I:Loading page decrypt
+I:Loading page decrypt_pin
+I:Loading page decrypt_pattern
+I:Loading page decrypt_redirect
+I:Loading page trydecrypt
+I:Loading page reapply_settings
+I:Loading page decrypt_users
+I:Loading page decrypt_users2
+I:Including file: /twres/pages/files.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/files.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Loading page filemanagerlist
+I:Loading page file_quick_actions
+I:Loading page select_path
+I:Loading page files_mkdir
+I:Loading page fm_multiselection
+I:Loading page fm_ms_actions
+I:Loading page file_search
+I:Loading page files_redirect
+I:Loading page files_bookmarks_prepare
+I:Loading page files_bookmarks
+I:Loading page filemanageroptions
+I:Loading page openas
+I:Loading page fm_file_checksum
+I:Loading page fm_file_checksum_calc
+I:Loading page fm_file_info
+I:Loading page choosedestinationfolder
+I:Loading page filemanagerrenamefile
+I:Loading page filemanagerrenamefolder
+I:Loading page filemanagerchmod
+I:Loading page filemanagerchmod_key
+I:Loading page filemanagerconfirm
+I:Loading page archive_confirm
+I:Loading page archive_cmd
+I:Loading page filemanageraction
+I:Loading page filemanagercomplete
+I:Loading page cat_file
+I:Including file: /twres/pages/rmmanager.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/rmmanager.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Loading page modules_mount
+I:Loading page modules_unmount
+I:Loading page root_modules
+I:Loading page module_actions
+I:Loading page module_delete
+I:Including file: /twres/pages/advanced.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/advanced.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Loading page advanced
+I:Loading page part_manage
+I:Loading page mod_survival
+I:Loading page mod_factory_rp
+I:Loading page mod_magisk
+I:Loading page mod_unmagisk
+I:Loading page mod_reset
+I:Loading page mod_pass
+I:Loading page mod_kernelsu
+I:Loading page mod_kernelsu_next
+I:Loading page mod_sukisu
+I:Loading page fox_modules
+I:Loading page fox_other_additions
+I:Loading page partsdcard
+I:Loading page terminal
+I:Loading page sideload
+I:Loading page fixcontexts
+I:Loading page apps_load
+I:Loading page apps_list
+I:Unable to open '/tmp/listapps/list'
+I:Unable to open '/tmp/listapps/list'
+I:Including file: /twres/pages/reboot.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/reboot.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Loading page reboot
+I:Loading page set_slot
+I:Including file: /twres/pages/settings.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/settings.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Loading page settings
+I:Loading page ext_context
+I:Loading page ext_general
+I:Loading page pass_select
+I:Loading page ext_screen
+I:Loading page ext_vibrate
+I:Loading page ext_backup
+I:Loading page ext_time
+I:Loading page ext_time_offset
+I:Loading page check_zone
+I:Loading page ext_time_lang
+I:Loading page ext_time_lang_busy
+I:Loading page about
+I:Loading page about_credits
+I:Parsing file: /twres/credits.txt
+I:Parsing file: /twres/translators.txt
+I:Parsing file: /twres/changelog.txt
+I:Loading page ext_gov
+I:Loading page ext_backup_quick
+I:Including file: /twres/pages/universal.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/universal.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Loading page filecheck
+I:Loading page rebootcheck
+I:Loading page rebootcheckoverlay
+I:Loading page no_os_warning
+I:Loading page clear_vars
+I:Loading page confirm_action
+I:Loading page action_page
+I:Loading page ota_simple
+I:Loading page singleaction_page
+I:Loading page action_complete
+I:Including file: /twres/pages/anywhere.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/anywhere.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Loading page lock
+I:Loading page console
+I:Including file: /twres/pages/dialogs.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/dialogs.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Loading page menu
+I:Loading page menu_sort
+I:Loading page fm_sort
+I:Loading page dialog_magisk_not_found
+I:Loading page dialog_modules_cannot_mount
+I:Loading page dialog_reset_average
+I:Loading page dialog_lost_info
+I:Loading page dialog_app
+I:Loading page dialog_error_partition
+I:Loading page pass_error
+I:Loading page dialog_enable_hw_mode
+I:Including file: /twres/pages/customization.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/customization.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Loading page ext_custom_reset
+I:Loading page ext_custom_gest
+I:Loading page ext_custom
+I:Loading page ext_custom_status
+I:Loading page ext_custom_key
+I:Loading page ext_custom_lock
+I:Loading page ext_custom_nav
+I:Loading page ext_custom_other
+I:Loading page ext_custom_nav_error
+I:Loading page ext_custom_nav_no_switch
+I:Loading page ext_custom_fonts_check
+I:Loading page ext_custom_fonts
+I:Loading page ext_custom_fonts_sec
+I:Loading page ext_custom_fonts_size
+I:Loading page ext_custom_fonts_cn
+I:Loading page ext_custom_theme
+I:Loading page ext_custom_splash
+I:Loading page ext_custom_splash_color
+I:Loading page ext_custom_splash_logo
+I:Loading page ext_custom_splash_select
+I:Loading page apply_changes
+I:Loading page apply_splash
+I:Loading page get_splash_info
+I:Including file: /twres/pages/fox.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/fox.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Loading page fox_ota
+I:Loading page fox_ota_lite
+I:Loading page fox_lab
+I:Loading page debug_pages
+I:Loading page debug
+I:Loading page debug_plus
+I:Loading page scaling
+I:Including file: /sbin/maintainer.xml...
+I:PageManager::LoadFileToBuffer loading filename: '/sbin/maintainer.xml' directly
+I:PageManager::LoadFileToBuffer loading filename: '/twres/pages/dummy.xml' directly
+I:Loading resources...
+I:Loading variables...
+I:Loading mouse cursor...
+I:Loading pages...
+I:Loading page maintainer
+I:Set overlay: ''
+I:Set page: 'clear_vars'
+I:Set page: 'ext_custom_status'
+I:operation_start: 'Start MTP'
+I:Cannot find file /sys/class/android_usb/android0/idVendor
+I:Cannot find file /sys/class/android_usb/android0/idProduct
+I:sending message to add 65538 '/data/media/0' 'Internal Storage'
+I:Message sent, add storage ID: 65538 '/data/media/0'
+I:[MTP] Starting MTP
+I:operation_end - status=0
+I:Set overlay: ''
+I:operation_start: 'ADB'
+I:Set page: 'clear_vars'
+I:Set page: 'navbar'
+I:Set page: 'filemanagerlist'
+I:Switching packages (OrangeFox)
+I:operation_end - status=0
+I:Attempt to load settings from settings file...
+I:InfoManager loading from '/persist/Fox/.foxs'.
+I:Backup folder set to '/data/media/0/Fox/BACKUPS/b362dcbd'
+I:Version number saved to '/cache/recovery/.version'
+I:Unable to mount '/usb_otg'
+I:Actual block device: '', current file system: 'auto'
+I:TWFunc::Set_Brightness: Setting brightness control to 204
+I:PassBak: Found backup
+I:Set page: 'ext_custom_status'
+I:Theme reloaded
+I:[MTP] created new mtpserver object
+I:[MTP] mtppipe add storage 65538 '/data/media/0'
+I:Set page: 'ext_custom'
+I:Set page: 'settings'
+I:Set page: 'advanced'
+I:Set page: 'filemanagerlist'
+E:[MTP] Mtp got error event
+E:[MTP] request read returned -1, errno: 108E:[MTP] cannot open bulk in ep
+E:[MTP] Failed to start usb driver!
+I:Set page: 'files_redirect'
+I:Set page: 'filemanageroptions'
+I:Set page: 'file_quick_actions'
+I:Set page: 'filemanagerlist'
+I:Set page: 'filemanagerlist'
+I:Set page: 'advanced'
+I:Set page: 'mount'
+I:Unable to mount '/usb_otg'
+I:Actual block device: '', current file system: 'auto'
+I:Unable to mount '/usb_otg'
+I:Actual block device: '', current file system: 'auto'
+I:Can't probe device /data/media/0
+I:Unable to mount '/usb_otg'
+I:Actual block device: '', current file system: 'auto'
+I:Set page: 'advanced'
+I:Set page: 'filemanagerlist'
+I:Set page: 'files_redirect'
+I:Set page: 'filemanageroptions'
+I:Set page: 'filemanagerlist'
+I:Set page: 'file_quick_actions'
+I:Set page: 'filemanagerlist'
+I:Set page: 'files_redirect'
+I:Set page: 'filemanageroptions'
+I:Set page: 'filemanagerlist'
+I:Set page: 'file_quick_actions'
+I:Set page: 'filemanagerlist'
+I:Set page: 'advanced'
+adbd
+I:Command 'xset fox_adb=1' received
+I:Set page: 'sideload'
+I:Set page: 'action_page'
+I:operation_start: 'Sideload'
+Starting ADB sideload feature...
+I:Cannot find file /sys/class/android_usb/android0/idVendor
+I:Cannot find file /sys/class/android_usb/android0/idProduct
+I:Disabling MTP
+05-26 01:41:10.039   928   929 I minadbd : usb_ffs.cpp:275 opening control endpoint /dev/usb-ffs/adb/ep0
+05-26 01:41:10.039   928   929 I minadbd : usb.cpp:152 UsbFfsConnection constructed
+05-26 01:41:10.040   928   930 I minadbd : usb.cpp:259 UsbFfs-monitor thread spawned
+05-26 01:41:10.040   928   930 I minadbd : usb.cpp:298 USB event: FUNCTIONFS_BIND
+Cancelling ADB sideload...
+I:Signaling child sideload process to exit.
+I:Killing child sideload process.
+I:Waiting for child sideload process to exit.
+I:Cannot find file /sys/class/android_usb/android0/idVendor
+I:Cannot find file /sys/class/android_usb/android0/idProduct
+I:Set overlay: ''
+I:Set page: 'action_complete'
+I:operation_end - status=1
+I:Set page: 'clear_vars'
+I:Set page: 'advanced'
+I:Set page: 'fox_other_additions'
+I:Set page: 'advanced'
+I:Set page: 'part_manage'
+I:Set page: 'advanced'
+I:Set page: 'mount'
+I:operation_start: 'Start MTP'
+I:Cannot find file /sys/class/android_usb/android0/idVendor
+I:Cannot find file /sys/class/android_usb/android0/idProduct
+I:sending message to add 65538 '/data/media/0' 'Internal Storage'
+I:Message sent, add storage ID: 65538 '/data/media/0'
+I:[MTP] Starting MTP
+I:operation_end - status=0
+I:[MTP] created new mtpserver object
+I:[MTP] mtppipe add storage 65538 '/data/media/0'
+I:Unable to mount '/usb_otg'
+I:Actual block device: '', current file system: 'auto'
+I:Unable to mount '/usb_otg'
+I:Actual block device: '', current file system: 'auto'
+I:Set page: 'advanced'
+I:Set page: 'filemanagerlist'
+I:Set page: 'files_redirect'
+I:Set page: 'filemanageroptions'
+I:Set page: 'file_quick_actions'
+I:Set page: 'filemanagerlist'
+I:Set page: 'files_redirect'
+I:Set page: 'filemanageroptions'
+I:Set page: 'file_quick_actions'
+I:Set page: 'filemanagerlist'
+I:Set page: 'restore'
+I:Set page: 'restore_prep'
+I:Set page: 'advanced'
+I:Set page: 'filemanagerlist'
+I:Set page: 'files_redirect'
+I:Set page: 'filemanageroptions'
+I:Set page: 'file_quick_actions'
+I:Set page: 'filemanagerlist'
+I:Set page: 'files_redirect'
+I:Set page: 'flash_image_confirm'
+I:Install Recovery Ramdisk: target partition=/recovery
+I:Set page: 'flash_image'
+I:operation_start: 'Flash Image'
+[IMAGE FLASH STARTED]
+Image to flash: '/sdcard/Download/Nekogram/Kernel/Backup/boot.img'
+Calculating restore details...
+I:Image filename is: boot.img
+I:Reading '/sdcard/Download/Nekogram/Kernel/Backup/boot.img', writing '/dev/block/bootdevice/by-name/boot_b'
+[IMAGE FLASH COMPLETED]
+I:Set page: 'flash_image_done'
+I:operation_end - status=0
+I:Set page: 'clear_vars'
+I:Set page: 'filemanagerlist'
+I:Set page: 'files_redirect'
+I:Set page: 'flash_image_confirm'
+I:Install Recovery Ramdisk: target partition=/recovery
+I:Set page: 'flash_image'
+I:operation_start: 'Flash Image'
+[IMAGE FLASH STARTED]
+Image to flash: '/sdcard/Download/Nekogram/Kernel/Backup/dtbo.img'
+Calculating restore details...
+I:Image filename is: dtbo.img
+I:Reading '/sdcard/Download/Nekogram/Kernel/Backup/dtbo.img', writing '/dev/block/bootdevice/by-name/dtbo_b'
+[IMAGE FLASH COMPLETED]
+I:Set page: 'flash_image_done'
+I:operation_end - status=0
+I:Set page: 'clear_vars'
+I:Set page: 'filemanagerlist'
+I:Set page: 'filemanageroptions'
+I:Set page: 'filemanagerlist'
+I:Set page: 'files_redirect'
+I:Set page: 'flash_image_confirm'
+I:Install Recovery Ramdisk: target partition=/recovery
+I:Set page: 'flash_image'
+I:operation_start: 'Flash Image'
+[IMAGE FLASH STARTED]
+Image to flash: '/sdcard/Download/Nekogram/Kernel/Backup/kernelsu_next_patched_20260830_215829.img'
+Calculating restore details...
+I:Image filename is: kernelsu_next_patched_20260830_215829.img
+I:Reading '/sdcard/Download/Nekogram/Kernel/Backup/kernelsu_next_patched_20260830_215829.img', writing '/dev/block/bootdevice/by-name/init_boot_b'
+[IMAGE FLASH COMPLETED]
+I:Set page: 'flash_image_done'
+I:operation_end - status=0
+I:Set page: 'rebootcheck'
+I:Set page: 'no_os_warning'
+I:Set page: 'main'
+I:Set overlay: ''
+I:Set page: 'clear_vars'
+I:Set page: 'ext_custom_status'
+I:operation_start: 'Stop MTP'
+I:Cannot find file /sys/class/android_usb/android0/idVendor
+I:Cannot find file /sys/class/android_usb/android0/idProduct
+I:Disabling MTP
+I:operation_end - status=0
+I:operation_start: 'ADB'
+I:operation_end - status=0
+I:Set page: 'password_enter'
+I:Set page: 'password_enter_num'
+I:Set page: 'password_check'
+I:operation_start: 'Start MTP'
+I:Cannot find file /sys/class/android_usb/android0/idVendor
+I:Cannot find file /sys/class/android_usb/android0/idProduct
+I:sending message to add 65538 '/data/media/0' 'Internal Storage'
+I:Message sent, add storage ID: 65538 '/data/media/0'
+I:[MTP] Starting MTP
+I:operation_end - status=0
+I:Set page: 'main'
+I:Set overlay: ''
+I:Set page: 'clear_vars'
+I:Set page: 'ext_custom_status'
+I:Set overlay: ''
+I:Set page: 'clear_vars'
+I:Set page: 'navbar'
+I:Set page: 'filemanagerlist'
+I:[MTP] created new mtpserver object
+I:[MTP] mtppipe add storage 65538 '/data/media/0'
+I:Set page: 'files_redirect'
+I:Set page: 'flash_image_confirm'
+I:Install Recovery Ramdisk: target partition=/recovery
+I:Set page: 'flash_image'
+I:operation_start: 'Flash Image'
+[IMAGE FLASH STARTED]
+Image to flash: '/sdcard/Download/Nekogram/Kernel/Backup/vendor_boot.img'
+Calculating restore details...
+I:Image filename is: vendor_boot.img
+I:Reading '/sdcard/Download/Nekogram/Kernel/Backup/vendor_boot.img', writing '/dev/block/bootdevice/by-name/vendor_boot_b'
+[IMAGE FLASH COMPLETED]
+I:Set page: 'flash_image_done'
+I:operation_end - status=0
+I:Set page: 'clear_vars'
+I:Set page: 'filemanagerlist'
+I:Set page: 'advanced'
+adbd
+I:Command 'xset fox_adb=1' received
+I:Set page: 'sideload'
+I:TWFunc::Set_Brightness: Setting brightness control to 5
+I:TWFunc::Set_Brightness: Setting brightness control to 0
+E:[MTP] Failed to fadvise
+E:[MTP] Failed to fadvise
+I:TWFunc::Set_Brightness: Setting brightness control to 204
+I:Set overlay: ''
+I:Set page: 'advanced'
+I:Set page: 'filemanagerlist'
+I:Set page: 'files_redirect'
+I:Set page: 'flash_confirm'
+I:Set page: 'flash_zip'
+I:operation_start: 'Flashing'
+Installing ZIP file '/sdcard/Backup/NexiunOS_V5_3.0.310.0_CN_Peridot_mr_mishun.zip'
+I:Is_Mounted: Unable to find partition for path '/vendor'
+I:Update binary zip
+I:Extracting updater binary 'META-INF/com/google/android/update-binary'
+Detecting Current Package
+Non-standard vAB installer
+- Detected Standard Package
+I:Zip does not contain SELinux file_contexts file in its root.
+I:---pre_rom_flash.sh start---
+I:Resetting SPL date to prevent anti-rollback protection...
+I:Detecting active boot slot...
+I:Active boot slot: _b
+I:Backing up OrangeFox recovery before ROM overwrites...
+100+0 records in
+100+0 records out
+104857600 bytes (100 M) copied, 0.054 s, 1.8 G/s
+I:Backup of OrangeFox recovery was successful
+I:---pre_rom_flash.sh end---
+I:Process ended with no errors.
+SELinux: Loaded file context from:
+		/plat_file_contexts
+		/system_ext_file_contexts
+		/product_file_contexts
+		/vendor_file_contexts
+		/odm_file_contexts
+########################################### Xiaomi.eu Updater ##############################################################################
+######## Xiaomi.eu Updater ########
+###################################
+Your device: peridotYour device: peridot
+Flashing firmware partitions...Flashing firmware partitions...
+Flashing boot partitions...Flashing boot partitions...
+Flashing super partition...Flashing super partition...
+about to run program [/system/bin/bootctl] with 4 args
+about to run program [/sbin/sh] with 4 args
+script succeeded: result was [0]I:Process ended with no errors.
+I:Install took 42 second(s).
+I:OrangeFox: installed ROM: /sdcard/Backup/NexiunOS_V5_3.0.310.0_CN_Peridot_mr_mishun.zip
+I:flash_zip: installer code = 2
+I:
+OrangeFox: Skipping the OrangeFox Process.
+Devices on super may not mount until after rebooting recovery.
+To flash additional zips, please reboot recovery to switch to the updated slot.
+I:IsRecoveryOverwritten: The checksums do not match for /recovery
+I:Command=dd bs=1048576 if=/dev/block/bootdevice/by-name/recovery_b of=/dev/block/bootdevice/by-name/recovery_a
+100+0 records in
+100+0 records out
+104857600 bytes (100 M) copied, 0.056 s, 1.7 G/s
+I:Process ended with no errors.
+Finished flashing the /recovery image
+
+Updating partition details...
+I:Data backup size is 75093MB, free: 281244MB.
+...done
+I:---post_rom_flash_completion.sh start---
+I:Restoring OrangeFox to slot _a...
+100+0 records in
+100+0 records out
+104857600 bytes (100 M) copied, 0.039 s, 2.5 G/s
+I:Restoring OrangeFox to slot _b...
+100+0 records in
+100+0 records out
+104857600 bytes (100 M) copied, 0.035 s, 2.7 G/s
+I:---post_rom_flash_completion.sh end---
+I:Process ended with no errors.
+Updating partition details...
+I:Data backup size is 75093MB, free: 281244MB.
+...done
+I:Set page: 'flash_done'
+I:operation_end - status=0
+I:Set page: 'confirm_action'
+I:Set page: 'action_page'
+I:operation_start: 'Format'
+Formatting Cache using mke2fs...
+I:mke2fs command: mke2fs -t ext4 -b 4096 -I 512 /dev/block/sda29 32768
+mke2fs 1.46.6 (1-Feb-2023)
+Discarding device blocks:     0/32768           done                            
+Creating filesystem with 32768 4k blocks and 32768 inodes
+
+Allocating group tables: 0/1   done                            
+Writing inode tables: 0/1   done                            
+Creating journal (4096 blocks): done
+Writing superblocks and filesystem accounting information: 0/1   done
+
+I:Process ended with no errors.
+I:e2fsdroid command: e2fsdroid -e -S /file_contexts -a /cache /dev/block/sda29
+SELinux: Loaded file context from:
+		/plat_file_contexts
+		/system_ext_file_contexts
+		/product_file_contexts
+		/vendor_file_contexts
+		/odm_file_contexts
+Created filesystem with 11/32768 inodes and 8201/32768 blocks
+I:Process ended with no errors.
+Done
+I:Recreating /cache/recovery/ folder.
+I:Version number saved to '/cache/recovery/.version'
+Updating partition details...
+I:Data backup size is 75093MB, free: 281244MB.
+...done
+I:Set overlay: ''
+I:Set page: 'action_complete'
+I:operation_end - status=0
+I:operation_start: 'Format'
+Wiping Cache & Dalvik...
+Cache & Dalvik Wipe completed
+Updating partition details...
+I:Data backup size is 75093MB, free: 281244MB.
+...done
+I:operation_end - status=0
+I:Set page: 'clear_vars'
+I:Set page: 'flash_done'
+I:Set page: 'clear_vars'
+I:Set page: 'filemanagerlist'
+I:Set page: 'advanced'
+I:Set page: 'confirm_action'
+I:Set page: 'action_page'
+I:operation_start: 'Copy Log'
