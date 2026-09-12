@@ -151,7 +151,9 @@ Peridot-Kernel-ACK-KSUNext-v3.3.0-SUSFS-v2.1.0-droidspaces-YYYYMMDD.zip       (a
 | **Duck Detector "Build time drift": kernel `2026-09-07` vs system `2026-07-01` (diff 68 hari)** | **Akar masalah**: `KBUILD_BUILD_TIMESTAMP` di-pin hardcode `Mon Sep  7 12:00:00 UTC 2026` di workflow, sedangkan tanggal build system (≈ `ro.build.date` ROM HyperOS 3 port) = 2026-07-01. Duck Detector membandingkan tanggal di `#1 SMP PREEMPT ...` (uname -a, dari `uts_banner`) vs tanggal build system → mismatch 68 hari dianggap anomali custom kernel. (Ref: webroot KSUN — "Duck Detector: Build time drift" muncul ketika timestamp uname tidak sinkron; Integrity-Box menjual "Spoof Build Time" sebagai fix, kita perbaiki di sumbernya saat build.) **Fix**: input workflow baru `rom_build_date` (default `2026-07-01`), step `Compute ROM-synced build timestamp` menurunkan `KBUILD_BUILD_TIMESTAMP` ke format uts_banner (`Wed Jul  1 00:00:00 UTC 2026`) — menerima epoch (`ro.build.date.utc`, disarankan), `YYYY-MM-DD`, atau string `ro.build.date` utuh; gagal keras jika tidak bisa di-parse. Saat ROM di-update: dispatch ulang dengan `ro.build.date.utc` baru → uname otomatis sinkron lagi. |
 | **Verifikasi akhir (run 34283279734): SEMUA HIJAU** | `guidix-full` ✅ `ack-full` ✅ `Publish to GitHub Releases` ✅ → Release **`Flavenz-20260908`** terbit (Latest): 2 zip @ 17.2 MB + `SHA256SUMS.txt`. Dicek lokal dari zip yang DIUNDUH: 0 nested zip, header baru `block=boot;` + `is_slot_device=auto;` ada di dalam zip, patch bootconfig ada di `tools/ak3-core.sh`, `sha256sum -c` OK/OK. https://github.com/ZxAlif-ID/Flavenz-Kernel-Peridot/releases/tag/Flavenz-20260908 |
 
-## Catatan Fork (ZxAlif-ID/Kernel_F6)
+## Catatan Fork (ZxAlif-ID/Kernel_F6) — DEPRECATED 2026-09-12
+> Repo tidak dipakai lagi. Riwayat di bawah dipertahankan hanya sebagai arsip sejarah; sumber AnyKernel3
+> kini 100% dari folder `anykernel/` yang di-vendor di repo ini (sejak `0af93dc`).
 - Fork dari `Mohithash/kernel_xiaomi_sm8635`
 - **Branch `17` sudah tidak ada** di fork (per 08 Sep 2026). Branch yang ada: `main`, `theettam-2.7`, `theettam-2.7-lts176`, `theettam-premium-sukisu`, `bestrom-a17-theettam`, `flazen-fix-v2.1`, `peridot-6.1.175`, `vos-16.2-clean-optimized`, `releases`
 - Workflow memakai branch **`main`** sebagai sumber AnyKernel3 (isi `anykernel/` identik dengan Mohithash; yang dipakai di zip adalah `anykernel.sh` generate sendiri, bukan milik fork)
@@ -203,7 +205,7 @@ Tinggal diverifikasi dari hasil build: kalau salah satu flavor error/jelek, bisa
 - MiCode peridot source: `github.com/MiCode/Xiaomi_Kernel_OpenSource` branch `peridot-u-oss`
 - Mirror MiCode aktif: `github.com/Peridot-Development/kernel_xiaomi_peridot` branch `peridot-u-oss`
 - GuidixX (ACK+CLO): `github.com/GuidixX/kernel_xiaomi_sm8635` branch `16.2`
-- AnyKernel3 (via fork): `github.com/ZxAlif-ID/Kernel_F6` branch `main` → folder `anykernel/`
+- ~~AnyKernel3 (via fork): `github.com/ZxAlif-ID/Kernel_F6` branch `main`~~ → folder `anykernel/` (vendor lokal, sumber tunggal sejak `0af93dc`)
 
 ## Catatan Lain
 - ROM port, kernel harus bersih dari tweak
