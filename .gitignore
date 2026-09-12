@@ -1,0 +1,13 @@
+# Local kernel build outputs (kernel sources are fetched by CI at build time,
+# never stored in this repo)
+/kernel/
+/out/
+/anykernel-build/
+/ccache/
+
+# Toolchain archives
+*.tar.zst
+
+# Editor / OS noise
+.DS_Store
+*.swp

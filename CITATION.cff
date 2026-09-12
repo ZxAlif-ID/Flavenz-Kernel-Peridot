@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+title: Flavenz Kernel for Xiaomi POCO F6 (Peridot)
+message: >-
+  Custom GKI 6.1 kernel for Xiaomi POCO F6 / Redmi Turbo 3 (peridot,
+  Snapdragon 8s Gen 3 / SM8635) with KernelSU Next, SUSFS root concealment,
+  and Droidspaces container support. Built via GitHub Actions in two
+  flavors: guidix-full (ACK + Qualcomm CLO) and ack-full (pure ACK).
+type: software
+authors:
+  - alias: ZxAlif-ID
+    website: "https://github.com/ZxAlif-ID"
+version: Flavenz-20260910
+date-released: "2026-09-10"
+license: GPL-2.0
+repository-code: "https://github.com/ZxAlif-ID/Flavenz-Kernel-Peridot"
+url: "https://github.com/ZxAlif-ID/Flavenz-Kernel-Peridot"
+keywords:
+  - android
+  - kernel
+  - peridot
+  - pocof6
+  - gki
+  - kernelsu
+  - susfs

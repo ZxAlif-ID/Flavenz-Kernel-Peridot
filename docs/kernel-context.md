@@ -165,7 +165,7 @@ Peridot-Kernel-ACK-KSUNext-v3.3.0-SUSFS-v2.1.0-droidspaces-YYYYMMDD.zip       (a
 4. **Docs & disclaimer + LICENSE GPLv2** (`2f03c17`, `010c8df`): README Disclaimer (project pribadi, AS-IS, tanggung jawab masing-masing, keamanan tidak dijamin), section Downloads ditulis ulang (Releases = 1 zip langsung; artifacts = dibungkus zip luar), error log sinkron.
 5. **Workflow `compare-kernel-zips.yml`** (`22fa2dd`, run 34290247236 sukses): one-shot perbandingan `template/Kernel-Peridot-Fix.zip` (proven user) vs release zip vs Mohithash v2.8 → laporan otomatis di-commit ke `logs/zip-comparison-<timestamp>.md`. Hasil kunci: template = AK3 Mohithash murni + Image sendiri; zip kita **kompatibel dengan template (PASS ×4)**; AK3 upstream kini `20260904` (kita `20231020`, upstream BELUM punya bootconfig → pertahankan patch).
 6. **Fix Duck Detector build time drift** (2026-09-10, commit `7e5880b`): timestamp build kernel kini diturunkan dari `ro.build.date` ROM via input `rom_build_date` (default `2026-07-01`) — uname -a sinkron dengan system, anomali "build time drift / mismatch" hilang. Droidspaces **full requirement terkonfirmasi via flash test user** (diinjeksi ke AK3 Theettam, boot OK). **Terverifikasi run 34425680767 (3 job hijau)** → Release `Flavenz-20260910`: `strings Image` dari zip yang DIUNDUH menunjukkan `#1 SMP PREEMPT Wed Jul  1 00:00:00 UTC 2026` di kedua flavor (tidak ada lagi `Sep  7 2026`), `sha256sum -c` OK/OK.
-7. **Menunggu aksi user**: flash zip dari Release `Flavenz-20260910` → cek Duck Detector (anomali build time drift harus hilang); upload `recovery.log` baru ke `logs/` bila gagal. Saat ROM di-update: dispatch ulang dengan `ro.build.date.utc` yang baru.
+7. **VERIFIKASI FLASH — TUNTAS (2026-09-11/12, laporan user)**: zip `ack-full` dari Release `Flavenz-20260910` di-flash LANGSUNG dari asset release (tanpa injeksi ke AK3 lain) → **boot OK, stabil, tidak ada masalah performa**. Duck Detector: anomali "build time drift" **hilang** (timestamp kernel = tanggal build ROM). Checklist Droidspaces = **full requirement** ✅. Benchmark AnTuTu V12.0.1 (ack-full): 1.644.070 (tanpa cooler) → 1.813.737 (cooler, +10,3%); detail di [`docs/benchmark/benchmark-ack.md`](benchmark/benchmark-ack.md) + laporan live di `media/ack-build-kernel/Antutu-Ack.html`. Saat ROM di-update: dispatch ulang dengan `ro.build.date.utc` yang baru. |
 
 ## PENDING — Pelajari & Tiru `build-theettam.yml` (Mohithash) sebagai Acuan Alur Workflow
 **Sumber acuan (JANGAN dimodifikasi isinya, murni dipelajari polanya)**: https://github.com/Mohithash/kernel_xiaomi_sm8635/blob/theettam-2.8/.github/workflows/build-theettam.yml (ada juga di branch `17` & `master`; file pendukung: `scripts/ci/build-flavor.sh`, `scripts/ci/pins.env`, `scripts/ci/kmi-baseline/`)
@@ -212,3 +212,9 @@ Tinggal diverifikasi dari hasil build: kalau salah satu flavor error/jelek, bisa
 - Gaming adalah prioritas utama
 - Flavor "full" include KernelSU via init_boot (GKI mode)
 - Theettam tweaknya: BORE, ADIOS, BBRv3, MGLRU, TEO, HZ=300, CAKE, uclamp — semua dari Mohithash, bukan dari GuidixX — TIDAK dipakai
+
+## Kebijakan Dokumen Dua Bahasa
+- **`docs/kernel-context.md`** (file ini, Bahasa Indonesia) = kanon/sumber kebenaran.
+- **`docs/kernel-context.en.md`** = terjemahan Inggris; WAJIB ikut diupdate setiap ada perubahan di file ini.
+- Benchmark: `docs/benchmark/benchmark-ack.md` (EN + ID dalam satu file).
+- Aturan: setiap PR/commit yang mengubah satu versi wajib memperbarui padanannya di commit yang sama.

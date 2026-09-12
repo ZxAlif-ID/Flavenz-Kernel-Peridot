@@ -4,12 +4,15 @@
 
 [![Kernel Version](https://img.shields.io/badge/Kernel-6.1.138-blue.svg)](https://kernel.org)
 [![Android](https://img.shields.io/badge/Android-14%2F15%2F16-green.svg)](https://android.com)
-[![Device](https://img.shields.io/badge/Device-Xiaomi%20POCO%20F6%20%2F%20Redmi%20Turbo%203-orange.svg)](https://www.gsmarena.com/xiaomi_poco_f6-12940.svg)
+[![Device](https://img.shields.io/badge/Device-Xiaomi%20POCO%20F6%20%2F%20Redmi%20Turbo%203-orange.svg)](https://www.gsmarena.com/xiaomi_poco_f6-12940.php)
 [![KSUNext](https://img.shields.io/badge/KSUNext-v3.3.0-purple.svg)](https://github.com/KernelSU/KernelSU)
 [![SUSFS](https://img.shields.io/badge/SUSFS-v2.1.0-red.svg)](https://github.com/simonpunk/susfs4ksu)
 [![License](https://img.shields.io/badge/License-GPLv2-yellow.svg)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/ZxAlif-ID/Flavenz-Kernel-Peridot?include_prereleases&logo=github)](https://github.com/ZxAlif-ID/Flavenz-Kernel-Peridot/releases/latest)
 
 *High-Performance, Clean GKI Custom Kernel engineered for Maximum Gaming Stability, KernelSU Next, SUSFS Root Concealment, and Native Droidspaces Container Support.*
+
+**🌐 Language / Bahasa: [English](README.md) | [Bahasa Indonesia](README.id.md)**
 
 </div>
 
@@ -46,16 +49,43 @@ Unlike kernels bloated with experimental, unstable patches (BORE, ADIOS, or unne
 ```tree
 Flavenz-Kernel-Peridot/
 ├── .github/
+│   ├── ISSUE_TEMPLATE/              # Bug report + feature request templates
 │   └── workflows/
-│       └── build-droidspaces.yml     # Build matrix: guidix-full vs ack-full (workflow_dispatch)
-├── anykernel/                        # Vendored AnyKernel3 tree (used for manual flashing; workflow regenerates anykernel.sh per-flavor at package time)
+│       ├── build-droidspaces.yml    # Build matrix: guidix-full vs ack-full (workflow_dispatch)
+│       └── compare-kernel-zips.yml  # One-shot zip comparison (template vs release vs upstream)
+├── anykernel/                        # Vendored AnyKernel3 tree (workflow regenerates anykernel.sh per-flavor at package time)
 ├── docs/
-│   └── kernel-context.md             # Technical documentation, research notes & error log
-├── LICENSE                           # GNU GPLv2
-└── README.md
+│   ├── kernel-context.md             # Technical documentation & error log (Bahasa Indonesia, canonical)
+│   ├── kernel-context.en.md          # English translation (keep both in sync)
+│   ├── benchmark/
+│   │   └── benchmark-ack.md          # ack-full AnTuTu benchmark data (EN + ID)
+│   └── index.html                    # GitHub Pages landing (live benchmark report)
+├── media/
+│   └── ack-build-kernel/             # Benchmark HTML report + screenshots
+├── CITATION.cff / CODE_OF_CONDUCT.md / CONTRIBUTING.md / SECURITY.md
+├── CHANGELOG.md / LICENSE / README.md / README.id.md
 ```
 
 > Kernel sources and build toolchains are **not** stored in this repo — they are fetched by the workflow at build time (kernel sources per flavor, Neutron Clang, KernelSU Next, SUSFS). AnyKernel3 is vendored in `anykernel/`.
+
+---
+
+## 📊 Benchmarks
+
+Real-world results of the **ack-full** build (flashed directly from the release zip, verified stable):
+
+| AnTuTu V12.0.1 | No cooler | Active cooler | Δ |
+|---|---:|---:|---:|
+| **Total** | 1,644,070 | **1,813,737** | **+10.3%** |
+| CPU | 471,867 | 545,611 | +15.6% |
+| GPU (Adreno 735) | 446,626 | 446,506 | −0.0% |
+| Memory | 353,002 | 400,412 | +13.4% |
+| UX | 372,575 | 421,208 | +13.1% |
+
+Peak temperature: 40.3°C → 33.8°C with an active cooler (−6.5°C). Full breakdown,
+thermal/battery data and the live HTML report: **[docs/benchmark/benchmark-ack.md](docs/benchmark/benchmark-ack.md)**
+— interactive version: [media/ack-build-kernel/Antutu-Ack.html](media/ack-build-kernel/Antutu-Ack.html)
+(or the [GitHub Pages page](https://zxalif-id.github.io/Flavenz-Kernel-Peridot/)).
 
 ---
 
@@ -95,16 +125,30 @@ Zips are also uploaded as run artifacts (**Actions** → latest green run → Ar
 
 ---
 
-## 🛠️ Build Pipeline
+## ⚙️ Build Pipeline
 
 This repository includes a fully automated GitHub Actions workflow (`.github/workflows/build-droidspaces.yml`):
 
 - Triggered manually via **workflow_dispatch** (Actions → Run workflow).
 - Matrix of **2 parallel jobs**: `guidix-full` and `ack-full`.
-- Steps: free disk space → install dependencies → setup Neutron Clang (with antman glibc patch) → clone kernel source per flavor → apply Droidspaces + ThinLTO configs → apply SYSVIPC kABI patch → setup KernelSU Next v3.3.0 → setup SUSFS v2.1.0 → build (`Image`, `Image.gz`, `dtbs`) → package AnyKernel3 ZIP (vendored `anykernel/` tree + generated `anykernel.sh`) → upload artifact.
+- Steps: free disk space → install dependencies → setup Neutron Clang (with antman glibc patch) → clone kernel source per flavor → apply Droidspaces + ThinLTO configs → apply SYSVIPC kABI patch → setup KernelSU Next v3.3.0 → setup SUSFS v2.1.0 → build (`Image`, `Image.gz`, `dtbs`) with a **ROM-synced build timestamp** (`rom_build_date` input — keeps `uname -a` aligned with the ROM's build date so integrity checkers like Duck Detector report no drift) → package AnyKernel3 ZIP (vendored `anykernel/` tree + generated `anykernel.sh`) → upload artifact.
 - **Release job**: after both matrix jobs succeed, a `release` job publishes the raw flashable zips + `SHA256SUMS.txt` to GitHub Releases (tag `Flavenz-YYYYMMDD`) with full release notes — no zip-in-zip.
 
-See `docs/kernel-context.md` for the full technical breakdown and the error-fix log.
+See `docs/kernel-context.md` (or its [English translation](docs/kernel-context.en.md)) for the full technical breakdown and the error-fix log.
+
+---
+
+## 🌐 Documentation
+
+| Document | Language | Content |
+|---|---|---|
+| [README.id.md](README.id.md) | Bahasa Indonesia | Overview, downloads, flashing, build pipeline |
+| [docs/kernel-context.md](docs/kernel-context.md) | Bahasa Indonesia (canonical) | Device/kernel research, configs, error-fix log |
+| [docs/kernel-context.en.md](docs/kernel-context.en.md) | English | Translation of the above |
+| [docs/benchmark/benchmark-ack.md](docs/benchmark/benchmark-ack.md) | EN + ID | ack-full AnTuTu benchmark (data + method) |
+| [CHANGELOG.md](CHANGELOG.md) | English | Notable changes per release |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | EN + ID | How to report bugs & contribute |
+| [SECURITY.md](SECURITY.md) | EN + ID | Vulnerability reporting policy |
 
 ---
 
@@ -129,3 +173,20 @@ See `docs/kernel-context.md` for the full technical breakdown and the error-fix 
 - **simonpunk**: SUSFS root concealment framework
 - **ravindu644 / Droidspaces**: Container namespace architecture & kABI patches
 - **Flavenz / ZxAlif-ID**: Maintenance, tuning, and packaging
+
+---
+
+## 📄 License
+
+Distributed under the **GNU General Public License v2.0** — see [LICENSE](LICENSE).
+Kernel sources belong to their respective upstream projects (Google ACK,
+Qualcomm CodeLinaro, Xiaomi MiCode, GuidixX, KernelSU Next, SUSFS).
+
+## ⚖️ Verified on
+
+| Item | Value |
+|---|---|
+| Device | POCO F6 / Redmi Turbo 3 (`peridot`) |
+| ROM | HyperOS 3 port (Android 16), build date 2026-07-01 |
+| Kernel | `6.1.138-android14-11` GKI, Neutron Clang 30062026, ThinLTO |
+| Verified | Release [Flavenz-20260910](https://github.com/ZxAlif-ID/Flavenz-Kernel-Peridot/releases/tag/Flavenz-20260910) `ack-full`: flashed from release asset, boot stable, AnTuTu V12.0.1 (see [Benchmarks](#-benchmarks)) |
