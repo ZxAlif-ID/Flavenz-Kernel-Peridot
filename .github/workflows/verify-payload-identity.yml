@@ -1,0 +1,168 @@
+name: Verify Payload Identity (release zip vs fla-boot artifact)
+
+# Verifikasi identitas payload kernel Image antara:
+#   A) zip release AK3 (default: Flavenz-20260910) -> Image
+#   B) artifact fla-boot run boot-test (run 34736539272, artifact 10310733935)
+#          -> kernel payload (magiskboot unpack)
+# Gate keras: sha256 Image (release) == sha256 payload kernel (boot.img) = 100% identik.
+# Tahap pra-AutoFDO: build baru (dengan AutoFDO) TIDAK BOLEH lanjut sebelum
+# baseline proven ini terverifikasi identik (kernel-riset.md, urutan eksekusi).
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Tag release sumber zip (default Flavenz-20260910)"
+        required: false
+        default: "Flavenz-20260910"
+      release_asset:
+        description: "Nama asset zip di release (default ACK-KSUNext v3.3.0 droidspaces-20260910)"
+        required: false
+        default: "Peridot-Kernel-ACK-KSUNext-v3.3.0-SUSFS-v2.1.0-droidspaces-20260910.zip"
+      source_run_id:
+        description: "Run ID pemilik artifact fla-boot (default 34736539272 = run proven)"
+        required: false
+        default: "34736539272"
+      artifact_id:
+        description: "ID artifact fla-boot (default 10310733935 = fla-boot-20260913-selftest)"
+        required: false
+        default: "10310733935"
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  verify:
+    name: Compare Image (release) vs kernel payload (fla-boot)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      RELEASE_TAG: ${{ github.event.inputs.release_tag }}
+      RELEASE_ASSET: ${{ github.event.inputs.release_asset }}
+      SOURCE_RUN_ID: ${{ github.event.inputs.source_run_id }}
+      ARTIFACT_ID: ${{ github.event.inputs.artifact_id }}
+      # github.event.inputs.* bukan inputs.* — konteks inputs.* pernah gagal
+      # di repo ini (error log: kasus inputs.flavor). Pola sama dipakai di sini.
+      EXPECTED_SHA: "8fd39a5537e39b97046bd1140546a47c7bf1a2042659108f9e8191a3b1b87e44"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup gh CLI auth
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh auth setup-git
+          gh auth status
+
+      - name: Resolve artifact name from ID
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          name=$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${ARTIFACT_ID}" --jq '.name')
+          expired=$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${ARTIFACT_ID}" --jq '.expired')
+          if [ "${expired}" = "true" ]; then
+            echo "::error::Artifact ${ARTIFACT_ID} sudah EXPIRED — verifikasi tidak bisa jalan."
+            exit 1
+          fi
+          echo "ARTIFACT_NAME=${name}" >> "$GITHUB_ENV"
+          echo "Artifact ${ARTIFACT_ID} -> ${name}"
+
+      - name: Download release zip + artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p work
+          curl -fSL --retry 3 -o work/release.zip \
+            "https://github.com/${GITHUB_REPOSITORY}/releases/download/${RELEASE_TAG}/${RELEASE_ASSET}"
+          gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${ARTIFACT_ID}/zip" > work/artifact.zip
+          echo "release.zip  : $(du -b work/release.zip | cut -f1) byte"
+          echo "artifact.zip : $(du -b work/artifact.zip | cut -f1) byte"
+
+      - name: Unpack kedua sisi
+        run: |
+          set -euo pipefail
+          cd work
+          unzip -o -q release.zip -d rel
+          unzip -o -q artifact.zip -d art
+          BOOTIMG=$(find art -name '*.img' -type f | head -n 1)
+          [ -n "${BOOTIMG}" ] || { echo "::error::Tidak ada .img di artifact"; exit 1; }
+          cp "${BOOTIMG}" boot.img
+          # Wajib ada Image di sisi release
+          [ -f rel/Image ] || { echo "::error::rel/Image tidak ditemukan"; exit 1; }
+          echo "BOOTIMG=${BOOTIMG}" >> "$GITHUB_ENV"
+
+      - name: Extract kernel payload dari boot.img (magiskboot vendor)
+        run: |
+          set -euo pipefail
+          # Pilih magiskboot sesuai arsitektur runner (pola build-boot-image.sh):
+          # x86_64 = scripts/ci/bin provenance Magisk v30.7; aarch64 = anykernel/tools.
+          case "$(uname -m)" in
+            x86_64)          MB=scripts/ci/bin/magiskboot-x86_64 ;;
+            aarch64|arm64)   MB=anykernel/tools/magiskboot ;;
+            *) echo "::error::Arsitektur $(uname -m) tidak didukung"; exit 1 ;;
+          esac
+          chmod +x "${MB}"
+          mkdir -p work/unp
+          cp work/boot.img work/unp/boot.img
+          # magiskboot exit code 1 diterima (boot/sign.rs warning ASN.1 pada
+          # header selftest tercatat di run proven 34736539272) — yang dijalankan
+          # ketat adalah KEBERADAAN payload hasil unpack.
+          set +e
+          "${MB}" unpack work/unp/boot.img
+          rc=$?
+          set -e
+          echo "magiskboot unpack rc=${rc} (warning ASN.1 diterima, pola run proven)"
+          [ -f work/unp/kernel ] || { echo "::error::Payload kernel gagal diekstrak"; exit 1; }
+          "${MB}" verify work/unp/boot.img || true
+
+      - name: Compare sha256 Image vs kernel payload (GATE 100% identik)
+        run: |
+          set -euo pipefail
+          s1=$(sha256sum work/rel/Image    | awk '{print $1}')
+          s2=$(sha256sum work/unp/kernel   | awk '{print $1}')
+          echo "Image (release)   : ${s1}"
+          echo "payload (fla-boot): ${s2}"
+          if [ "${s1}" != "${s2}" ]; then
+            echo "::error::GATE FAIL — payload kernel TIDAK identik dengan Image release"
+            exit 1
+          fi
+          if [ "${s1}" != "${EXPECTED_SHA}" ]; then
+            echo "::error::GATE FAIL — sha256 menyimpang dari baseline proven ${EXPECTED_SHA}"
+            exit 1
+          fi
+          echo "GATE PASS — payload kernel 100% IDENTIK (sha256 ${s1})"
+
+      - name: Write comparison report
+        if: always()
+        run: |
+          set -uo pipefail
+          s1=$(sha256sum work/rel/Image 2>/dev/null | awk '{print $1}' || echo 'n/a')
+          s2=$(sha256sum work/unp/kernel 2>/dev/null | awk '{print $1}' || echo 'n/a')
+          {
+            echo "# Payload Identity Report — $(date -u '+%Y-%m-%d %H:%M:%SZ')"
+            echo ""
+            echo "- Release : ${RELEASE_TAG} / ${RELEASE_ASSET}"
+            echo "- Artifact: ${ARTIFACT_ID} (${ARTIFACT_NAME:-?}) dari run ${SOURCE_RUN_ID}"
+            echo "- Image (release)   sha256: ${s1}"
+            echo "- payload (fla-boot) sha256: ${s2}"
+            if [ "${s1}" = "${s2}" ] && [ "${s1}" != "n/a" ]; then
+              echo "- HASIL: **IDENTIK** (baseline proven: ${EXPECTED_SHA})"
+            else
+              echo "- HASIL: **TIDAK IDENTIK / GAGAL EKSTRAKSI**"
+            fi
+          } > work/payload-identity-report.md
+          cat work/payload-identity-report.md
+
+      - name: Upload comparison report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: payload-identity-report
+          path: work/payload-identity-report.md
+          if-no-files-found: warn
+          retention-days: 30
