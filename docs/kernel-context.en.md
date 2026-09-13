@@ -197,9 +197,9 @@ What makes it "work very well" (analysis of 2026-09-08):
 ## PENDING — Additional Roadmap (2026-09-13, guidix emergency session)
 Agreed priority order (agent recommendation — work in sequence):
 1. **[ ] Boot-test image artifact (priority #1, cheapest & most protective)** — from the built
-   `Image`, the workflow repacks it into `boot-test-ack.img` (magiskboot: header from the user's
-   stock backup `/sdcard/Download/Nekogram/Kernel/Backup/boot.img`, kernel payload swapped for the
-   new `Image`) and uploads it as a second artifact. Goal: test the kernel WITHOUT writing any
+   `Image`, the workflow repacks it into `boot-test-ack.img` (magiskboot: header taken from a
+   full stock `boot.img` backup, kernel payload swapped for the new `Image`) and uploads it as
+   a second artifact. Goal: test the kernel WITHOUT writing any
    partition — `fastboot boot boot-test-ack.img` (boots from RAM, reboot = back to normal).
    Prevents a repeat of the Guidix bootloop + dead-touch case. If the Xiaomi bootloader blocks
    `fastboot boot`: reversible fallback = flash to the inactive slot + `fastboot set_active`,

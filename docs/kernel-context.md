@@ -194,8 +194,8 @@ Alur yang membuatnya "bekerja sangat baik" (hasil analisis 2026-09-08):
 ## PENDING — Roadmap Tambahan (2026-09-13, sesi darurat guidix)
 Urutan prioritas yang disepakati (rekomendasi agent — dikerjakan berurutan):
 1. **[ ] Boot-test image artifact (prioritas #1, paling murah & paling melindungi)** — dari `Image`
-   hasil build, workflow repack jadi `boot-test-ack.img` (magiskboot: header dari backup stock user
-   `/sdcard/Download/Nekogram/Kernel/Backup/boot.img`, payload kernel diganti `Image` baru) + upload
+   hasil build, workflow repack jadi `boot-test-ack.img` (magiskboot: header dari `boot.img` stock
+   hasil backup penuh, payload kernel diganti `Image` baru) + upload
    sebagai artifact kedua. Tujuan: uji kernel TANPA menulis partisi — `fastboot boot boot-test-ack.img`
    (boot dari RAM, reboot = kembali normal). Mencegah kasus bootloop + touch-mati seperti Guidix
    terulang. Jika bootloader Xiaomi memblokir `fastboot boot`: alternatif reversibel = flash ke slot

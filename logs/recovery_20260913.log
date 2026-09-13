@@ -2115,10 +2115,10 @@ I:Install Recovery Ramdisk: target partition=/recovery
 I:Set page: 'flash_image'
 I:operation_start: 'Flash Image'
 [IMAGE FLASH STARTED]
-Image to flash: '/sdcard/Download/Nekogram/Kernel/Backup/boot.img'
+Image to flash: '<user-backup>/boot.img'
 Calculating restore details...
 I:Image filename is: boot.img
-I:Reading '/sdcard/Download/Nekogram/Kernel/Backup/boot.img', writing '/dev/block/bootdevice/by-name/boot_b'
+I:Reading '<user-backup>/boot.img', writing '/dev/block/bootdevice/by-name/boot_b'
 [IMAGE FLASH COMPLETED]
 I:Set page: 'flash_image_done'
 I:operation_end - status=0
@@ -2130,10 +2130,10 @@ I:Install Recovery Ramdisk: target partition=/recovery
 I:Set page: 'flash_image'
 I:operation_start: 'Flash Image'
 [IMAGE FLASH STARTED]
-Image to flash: '/sdcard/Download/Nekogram/Kernel/Backup/dtbo.img'
+Image to flash: '<user-backup>/dtbo.img'
 Calculating restore details...
 I:Image filename is: dtbo.img
-I:Reading '/sdcard/Download/Nekogram/Kernel/Backup/dtbo.img', writing '/dev/block/bootdevice/by-name/dtbo_b'
+I:Reading '<user-backup>/dtbo.img', writing '/dev/block/bootdevice/by-name/dtbo_b'
 [IMAGE FLASH COMPLETED]
 I:Set page: 'flash_image_done'
 I:operation_end - status=0
@@ -2147,10 +2147,10 @@ I:Install Recovery Ramdisk: target partition=/recovery
 I:Set page: 'flash_image'
 I:operation_start: 'Flash Image'
 [IMAGE FLASH STARTED]
-Image to flash: '/sdcard/Download/Nekogram/Kernel/Backup/kernelsu_next_patched_20260830_215829.img'
+Image to flash: '<user-backup>/kernelsu_next_patched.img'
 Calculating restore details...
-I:Image filename is: kernelsu_next_patched_20260830_215829.img
-I:Reading '/sdcard/Download/Nekogram/Kernel/Backup/kernelsu_next_patched_20260830_215829.img', writing '/dev/block/bootdevice/by-name/init_boot_b'
+I:Image filename is: kernelsu_next_patched.img
+I:Reading '<user-backup>/kernelsu_next_patched.img', writing '/dev/block/bootdevice/by-name/init_boot_b'
 [IMAGE FLASH COMPLETED]
 I:Set page: 'flash_image_done'
 I:operation_end - status=0
@@ -2193,10 +2193,10 @@ I:Install Recovery Ramdisk: target partition=/recovery
 I:Set page: 'flash_image'
 I:operation_start: 'Flash Image'
 [IMAGE FLASH STARTED]
-Image to flash: '/sdcard/Download/Nekogram/Kernel/Backup/vendor_boot.img'
+Image to flash: '<user-backup>/vendor_boot.img'
 Calculating restore details...
 I:Image filename is: vendor_boot.img
-I:Reading '/sdcard/Download/Nekogram/Kernel/Backup/vendor_boot.img', writing '/dev/block/bootdevice/by-name/vendor_boot_b'
+I:Reading '<user-backup>/vendor_boot.img', writing '/dev/block/bootdevice/by-name/vendor_boot_b'
 [IMAGE FLASH COMPLETED]
 I:Set page: 'flash_image_done'
 I:operation_end - status=0
