@@ -11,6 +11,10 @@ on:
         description: "ro.build.date ROM yang terpasang. Disarankan epoch: `adb shell getprop ro.build.date.utc`, atau format 'YYYY-MM-DD', atau string getprop utuh. Timestamp build kernel (uname -a) diturunkan darinya — fix Duck Detector build-time drift. Default = tanggal port HyperOS 3."
         required: false
         default: "2026-07-01"
+      autofdo_profile_url:
+        description: "URL profil AutoFDO (kernel.afdo, hasil simpleperf+create_llvm_prof dari device). KOSONG = build proven normal (identik jalur proven). Terisi = build final AutoFDO (CLANG_AUTOFDO_PROFILE) yang ikut auto-release."
+        required: false
+        default: ""
 
 jobs:
   build:
@@ -206,6 +210,35 @@ jobs:
           cd ..
           rm sysvipc_kabi.patch
 
+      - name: Apply AutoFDO backport (hanya jika profil disediakan)
+        if: ${{ github.event.inputs.autofdo_profile_url != '' }}
+        run: |
+          set -euo pipefail
+          # Tahap 2: plumbing AutoFDO (backport upstream 315ad8780a) hanya saat
+          # operator menyediakan profil device. Jalur default (tanpa profil)
+          # TIDAK tersentuh — byte-identik jalur proven.
+          git -C kernel apply --check ../patches/0001-kbuild-Add-AutoFDO-support-for-Clang-build-ACK-6.1.patch
+          git -C kernel apply ../patches/0001-kbuild-Add-AutoFDO-support-for-Clang-build-ACK-6.1.patch
+          # CONFIG_AUTOFDO_CLANG=y di config final (resolve sama seperti step
+          # "Apply Droidspaces & Container Configs"); tanpa ini include
+          # Makefile.autofdo tidak jalan dan profil diabaikan diam-diam.
+          CONFIG_FILE="kernel/arch/arm64/configs/gki_defconfig"
+          if [ -f "kernel/arch/arm64/configs/vendor/peridot_GKI.config" ]; then
+            CONFIG_FILE="kernel/arch/arm64/configs/vendor/peridot_GKI.config"
+          fi
+          grep -q '^CONFIG_AUTOFDO_CLANG' "$CONFIG_FILE" \
+            || echo 'CONFIG_AUTOFDO_CLANG=y' >> "$CONFIG_FILE"
+          echo "AUTOFDO_PROFILE_MODE=true" >> "$GITHUB_ENV"
+          echo "AutoFDO backport terpasang — build final dengan profil"
+
+      - name: Download AutoFDO profile
+        if: ${{ github.event.inputs.autofdo_profile_url != '' }}
+        run: |
+          set -euo pipefail
+          curl -fSL --retry 3 -o kernel.afdo "${{ github.event.inputs.autofdo_profile_url }}"
+          [ -s kernel.afdo ] || { echo "::error::profil AutoFDO kosong"; exit 1; }
+          ls -lh kernel.afdo
+
       - name: Setup KernelSU Next (pershoot/dev-susfs)
         run: |
           cd kernel
@@ -243,6 +276,15 @@ jobs:
             STRIP=$CLANG_BIN/llvm-strip
             KCFLAGS="-Wno-default-const-init-var-unsafe -march=armv9.2-a+crypto+dotprod"
           )
+
+          # Tahap 2: profil AutoFDO (hanya ada jika operator mengisi
+          # autofdo_profile_url saat dispatch) — variabel build upstream
+          if [ -f kernel.afdo ]; then
+            MAKE_FLAGS+=(CLANG_AUTOFDO_PROFILE="$GITHUB_WORKSPACE/kernel.afdo")
+            echo "Build AutoFDO FINAL: CLANG_AUTOFDO_PROFILE=$GITHUB_WORKSPACE/kernel.afdo"
+          else
+            echo "Jalur proven normal (tanpa AutoFDO profile)"
+          fi
 
           cd kernel
           make "${MAKE_FLAGS[@]}" gki_defconfig

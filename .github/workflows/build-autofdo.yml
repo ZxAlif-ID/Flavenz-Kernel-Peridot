@@ -1,0 +1,358 @@
+name: Build Kernel - AutoFDO (Tahap 2, artifact-only)
+
+# Tahap 2 roadmap (kernel-riset.md §3): build ack-full + plumbing AutoFDO
+# (backport upstream 315ad8780a via patches/0001-kbuild-Add-AutoFDO-*.patch).
+#
+# Mode ini TIDAK publish release — vehicle uji pipeline AutoFDO:
+#   - Tanpa profil (default): CONFIG_AUTOFDO_CLANG=y tanpa CLANG_AUTOFDO_PROFILE
+#     -> hanya dwarf berubah, nol dampak runtime (docs upstream autofdo.rst).
+#   - Dengan profil (input profile_url): make CLANG_AUTOFDO_PROFILE=<kernel.afdo>
+#     -> build final AutoFDO (butuh profil hasil simpleperf ETM dari device).
+# Gates: banner uname (patok sublevel 6.1.138-android14-11), CONFIG_AUTOFDO_CLANG
+# terpasang di .config, perbandingan sha256 Image vs baseline proven 8fd39a55.
+# Release resmi TETAP lewat build-droidspaces.yml (jalur proven).
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile_url:
+        description: "URL kernel.afdo (AutoFDO profile). Kosong = build koleksi profil (tanpa profil)."
+        required: false
+        default: ""
+      rom_build_date:
+        description: "ro.build.date ROM yang terpasang (sama seperti workflow utama)"
+        required: false
+        default: "2026-07-01"
+
+permissions:
+  contents: read
+
+env:
+  ARCH: arm64
+  KERNEL_COMMIT: 0c3d559bcd85
+  KERNELSU_VERSION: v3.3.0
+  SUSFS_VERSION: v2.1.0
+  # Image baseline proven (run 34425680767, release Flavenz-20260910) —
+  # hasil verifikasi identitas run 34743245600 (verify-payload-identity.yml).
+  BASELINE_IMAGE_SHA: "8fd39a5537e39b97046bd1140546a47c7bf1a2042659108f9e8191a3b1b87e44"
+  KBUILD_BUILD_USER: "builder"
+  KBUILD_BUILD_HOST: "droidspaces-ci"
+
+jobs:
+  build:
+    name: Build ack-full + AutoFDO plumbing
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    steps:
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+            /opt/hostedtoolcache/CodeQL /usr/local/share/powershell \
+            /usr/share/swift
+          sudo docker image prune --all --force || true
+          df -h
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Compute ROM-synced build timestamp
+        env:
+          ROM_BUILD_DATE: ${{ github.event.inputs.rom_build_date }}
+        run: |
+          set -euo pipefail
+          IN=$(printf '%s' "${ROM_BUILD_DATE}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+          if [ -z "${IN}" ]; then
+            echo "::error::rom_build_date kosong"; exit 1
+          fi
+          TS=""
+          if printf '%s' "${IN}" | grep -qE '^[0-9]{9,11}$'; then
+            TS=$(date -u -d "@${IN}" '+%a %b %e %H:%M:%S UTC %Y')
+          elif TS=$(date -u -d "${IN}" '+%a %b %e %H:%M:%S UTC %Y' 2>/dev/null); then
+            :
+          else
+            echo "::error::rom_build_date tidak bisa diparse: '${IN}'"; exit 1
+          fi
+          echo "KBUILD_BUILD_TIMESTAMP=${TS}" >> "$GITHUB_ENV"
+          echo "Kernel build timestamp: ${TS}"
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y --no-install-recommends \
+            bc bison flex libssl-dev libelf-dev \
+            python3 python3-pip cpio pahole \
+            lz4 zstd libzstd-dev curl git zip \
+            gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi \
+            binutils-aarch64-linux-gnu
+
+      - name: Setup Neutron Clang
+        run: |
+          set -euo pipefail
+          rm -rf "$HOME/clang"; mkdir -p "$HOME/clang"; cd "$HOME/clang"
+          curl -fsSLO "https://github.com/Neutron-Toolchains/clang-build-catalogue/releases/download/30062026/neutron-clang-30062026.tar.zst"
+          tar -I zstd -xf "neutron-clang-30062026.tar.zst" && rm -f "neutron-clang-30062026.tar.zst"
+          curl -fsSLo antman "https://raw.githubusercontent.com/Neutron-Toolchains/antman/0b32c45e3ad83a953b4bc3fd2feb4ad3cc87c1e8/antman"
+          chmod +x antman
+          for i in 1 2 3 4; do
+            ./antman --patch=glibc && break
+            [ "$i" = 4 ] && { echo "::error::antman failed 4 times"; exit 1; }
+            echo "antman attempt $i failed; retrying in $((i*20))s"; sleep $((i*20))
+          done
+          echo "$HOME/clang/bin" >> $GITHUB_PATH
+
+      - name: Clone Pure ACK Source + Defconfig
+        run: |
+          rm -rf kernel
+          git config --global http.lowSpeedLimit 1000
+          git config --global http.lowSpeedTime 300
+          ACK_OK=false
+          for i in 1 2 3; do
+            echo "ACK clone attempt $i/3"
+            if git clone --filter=blob:none --no-checkout \
+              https://android.googlesource.com/kernel/common \
+              kernel; then
+              ACK_OK=true
+              break
+            fi
+            rm -rf kernel
+            [ "$i" = 3 ] || sleep $((i * 30))
+          done
+          [ "$ACK_OK" = true ] || { echo "::error::ACK clone failed after 3 attempts"; exit 1; }
+          cd kernel
+          CO_OK=false
+          for i in 1 2 3; do
+            echo "ACK checkout attempt $i/3"
+            if git checkout $KERNEL_COMMIT; then
+              CO_OK=true
+              break
+            fi
+            sleep $((i * 15))
+          done
+          [ "$CO_OK" = true ] || { echo "::error::ACK checkout failed after 3 attempts"; exit 1; }
+          cd ..
+          echo "Cloning peridot-defconfig..."
+          CLONED=false
+          for branch in 17 main theettam-2.8 theettam-2.7; do
+            echo "Trying branch: $branch"
+            if git clone --depth=1 -b "$branch" https://github.com/Mohithash/kernel_xiaomi_sm8635 peridot-defconfig 2>/dev/null; then
+              echo "Successfully cloned using branch: $branch"
+              CLONED=true
+              break
+            fi
+            rm -rf peridot-defconfig
+          done
+          if [ "$CLONED" = false ]; then
+            echo "::error::Failed to clone peridot-defconfig from any candidate branch!"
+            exit 1
+          fi
+          mkdir -p kernel/arch/arm64/configs/vendor
+          cp peridot-defconfig/arch/arm64/configs/gki_defconfig \
+            kernel/arch/arm64/configs/gki_defconfig
+          cp peridot-defconfig/arch/arm64/configs/vendor/peridot_GKI.config \
+            kernel/arch/arm64/configs/vendor/peridot_GKI.config
+          cp peridot-defconfig/scripts/Makefile.extrawarn \
+            kernel/scripts/Makefile.extrawarn
+          echo 'KBUILD_CFLAGS += $(call cc-disable-warning, uninitialized-const-pointer)' \
+            >> kernel/scripts/Makefile.extrawarn
+          rm -rf peridot-defconfig
+
+      - name: Apply Droidspaces & Container Configs
+        run: |
+          cd kernel
+          CONFIG_FILE="arch/arm64/configs/gki_defconfig"
+          if [ -f "arch/arm64/configs/vendor/peridot_GKI.config" ]; then
+            CONFIG_FILE="arch/arm64/configs/vendor/peridot_GKI.config"
+          fi
+          printf '%s\n' \
+            CONFIG_SYSVIPC=y \
+            CONFIG_PID_NS=y \
+            CONFIG_IPC_NS=y \
+            CONFIG_USER_NS=y \
+            CONFIG_NET_NS=y \
+            CONFIG_DEVTMPFS=y \
+            CONFIG_DEVTMPFS_MOUNT=y \
+            CONFIG_POSIX_MQUEUE=y \
+            CONFIG_NETFILTER_XT_MATCH_ADDRTYPE=y \
+            CONFIG_TMPFS_POSIX_ACL=y \
+            CONFIG_TMPFS_XATTR=y \
+            CONFIG_LTO=y \
+            CONFIG_LTO_CLANG=y \
+            CONFIG_LTO_CLANG_THIN=y \
+            CONFIG_KALLSYMS=y \
+            CONFIG_KALLSYMS_ALL=y \
+            CONFIG_AUTOFDO_CLANG=y \
+            >> "$CONFIG_FILE"
+          echo "AUTOFDO_CONFIG_FILE=${CONFIG_FILE}" >> "$GITHUB_ENV"
+          cd ..
+
+      - name: Apply kABI SYSVIPC patch (GKI 6.1)
+        run: |
+          wget -q "https://raw.githubusercontent.com/ravindu644/Droidspaces-OSS/main/Documentation/resources/kernel-patches/GKI/below-kernel-6.12/001.GKI-below-6.12-fix_sysvipc_kabi_6_7_8.patch" \
+            -O sysvipc_kabi.patch
+          cd kernel
+          git apply ../sysvipc_kabi.patch || echo "kABI patch applied with notes"
+          cd ..
+          rm sysvipc_kabi.patch
+
+      - name: Setup KernelSU Next (pershoot/dev-susfs)
+        run: |
+          cd kernel
+          curl -LSs "https://raw.githubusercontent.com/pershoot/KernelSU-Next/dev-susfs/kernel/setup.sh" \
+            | bash -s $KERNELSU_VERSION
+
+      - name: Setup SUSFS
+        run: |
+          git clone --depth=1 -b gki-android14-6.1 \
+            https://gitlab.com/simonpunk/susfs4ksu \
+            susfs4ksu
+          cp susfs4ksu/kernel_patches/fs/susfs.c kernel/fs/
+          cp susfs4ksu/kernel_patches/include/linux/susfs*.h kernel/include/linux/
+          cd kernel
+          git apply ../susfs4ksu/kernel_patches/50_add_susfs_in_gki-android14-6.1.patch \
+            || echo "SUSFS patch applied with warnings or skipped"
+
+      - name: Apply AutoFDO backport patch (Tahap 2)
+        run: |
+          set -euo pipefail
+          # Gate keras: patch harus apply bersih (snapshot ACK pinned; kalau
+          # CONTEXT berubah, FAIL — jangan lanjut dengan tree setengah ter-patch)
+          git -C kernel apply --check ../patches/0001-kbuild-Add-AutoFDO-support-for-Clang-build-ACK-6.1.patch
+          git -C kernel apply ../patches/0001-kbuild-Add-AutoFDO-support-for-Clang-build-ACK-6.1.patch
+          echo "=== autofdo plumbing terpasang ==="
+          grep -n "AUTOFDO" kernel/scripts/Makefile.autofdo | head -3
+          ls -la kernel/scripts/Makefile.autofdo
+
+      - name: Download AutoFDO profile (opsional)
+        if: ${{ github.event.inputs.profile_url != '' }}
+        run: |
+          set -euo pipefail
+          curl -fSL --retry 3 -o kernel.afdo "${{ github.event.inputs.profile_url }}"
+          [ -s kernel.afdo ] || { echo "::error::profil kosong"; exit 1; }
+          ls -lh kernel.afdo
+
+      - name: Build kernel
+        run: |
+          export PATH="$HOME/clang/bin:$PATH"
+          CLANG_BIN=$HOME/clang/bin
+
+          MAKE_FLAGS=(
+            -j$(nproc)
+            O=out
+            ARCH=arm64
+            CC=clang
+            CLANG_TRIPLE=aarch64-linux-gnu-
+            CROSS_COMPILE=aarch64-linux-gnu-
+            LD=$CLANG_BIN/ld.lld
+            AR=$CLANG_BIN/llvm-ar
+            NM=$CLANG_BIN/llvm-nm
+            OBJCOPY=$CLANG_BIN/llvm-objcopy
+            OBJDUMP=$CLANG_BIN/llvm-objdump
+            STRIP=$CLANG_BIN/llvm-strip
+            KCFLAGS="-Wno-default-const-init-var-unsafe -march=armv9.2-a+crypto+dotprod"
+          )
+          # Profil AutoFDO (jika ada) via variabel build upstream
+          if [ -f kernel.afdo ]; then
+            MAKE_FLAGS+=(CLANG_AUTOFDO_PROFILE="$GITHUB_WORKSPACE/kernel.afdo")
+            echo "Build AutoFDO FINAL dengan profil: $GITHUB_WORKSPACE/kernel.afdo"
+          else
+            echo "Build koleksi profil: CONFIG_AUTOFDO_CLANG=y tanpa profil (dwarf-only)"
+          fi
+
+          cd kernel
+          make "${MAKE_FLAGS[@]}" gki_defconfig
+          if [ -f "arch/arm64/configs/vendor/peridot_GKI.config" ]; then
+            make "${MAKE_FLAGS[@]}" vendor/peridot_GKI.config
+          fi
+          make "${MAKE_FLAGS[@]}" Image Image.gz dtbs
+
+      - name: Verify build (gates Tahap 2)
+        run: |
+          set -euo pipefail
+          cd kernel
+          [ -f out/arch/arm64/boot/Image ] || { echo "::error::Image tidak ada"; exit 1; }
+          # Gate 1: CONFIG_AUTOFDO_CLANG benar-benar aktif di .config final
+          grep -q '^CONFIG_AUTOFDO_CLANG=y' out/.config \
+            || { echo "::error::CONFIG_AUTOFDO_CLANG tidak aktif di .config"; exit 1; }
+          echo "Gate 1 OK: CONFIG_AUTOFDO_CLANG=y di .config"
+          # Gate 2: banner uname patok sublevel proven (suffix commit bebas)
+          BANNER=$(strings out/arch/arm64/boot/Image | grep -m1 'Linux version')
+          echo "Banner: ${BANNER}"
+          echo "${BANNER}" | grep -q '6\.1\.138-android14-11' \
+            || { echo "::error::banner uname menyimpang dari patok 6.1.138-android14-11"; exit 1; }
+          # Gate 3: catat sha256 Image vs baseline proven (informatif — dengan
+          # plumbing tanpa profil, codegen identik diharapkan; dwarf hanya
+          # menyentuh section debug yang di-strip dari Image)
+          SHA=$(sha256sum out/arch/arm64/boot/Image | awk '{print $1}')
+          echo "Image sha256 : ${SHA}"
+          echo "Baseline     : ${BASELINE_IMAGE_SHA}"
+          if [ "${SHA}" = "${BASELINE_IMAGE_SHA}" ]; then
+            echo "Gate 3: Image IDENTIK baseline proven — nol drift codegen"
+            echo "IMAGE_MATCH_BASELINE=true" >> "$GITHUB_ENV"
+          else
+            echo "Gate 3: Image BEDA dari baseline (dwarf/metadata — evaluasi manual)"
+            echo "IMAGE_MATCH_BASELINE=false" >> "$GITHUB_ENV"
+          fi
+
+      - name: Package AnyKernel3 (artifact-only, TIDAK release)
+        run: |
+          DATE=$(date +%Y%m%d)
+          ZIPNAME="Peridot-Kernel-ACK-AutoFDO-KSUNext-${KERNELSU_VERSION}-SUSFS-${SUSFS_VERSION}-droidspaces-${DATE}.zip"
+          ZIPPATH="${GITHUB_WORKSPACE}/${ZIPNAME}"
+          echo "ZIPNAME=${ZIPNAME}" >> "$GITHUB_ENV"
+          echo "ZIPPATH=${ZIPPATH}" >> "$GITHUB_ENV"
+          cd anykernel
+          printf '%s\n' \
+            '# AnyKernel3 Ramdisk Mod Script' \
+            '# osm0sis @ xda-developers' \
+            '' \
+            '## AnyKernel setup' \
+            '# begin properties' \
+            "properties() { '" \
+            "kernel.string=Flavenz Kernel (ack-full+AutoFDO) by ZxAlif-ID" \
+            'do.devicecheck=1' \
+            'do.modules=0' \
+            'do.systemless=1' \
+            'do.cleanup=1' \
+            'do.cleanuponabort=0' \
+            'device.name1=peridot' \
+            'device.name2=peridot_global' \
+            "'; } # end properties" \
+            '' \
+            '## AnyKernel install' \
+            '# boot shell variables' \
+            'block=boot;' \
+            'is_slot_device=auto;' \
+            'ramdisk_compression=auto;' \
+            'patch_vbmeta_flag=auto;' \
+            'no_magisk_check=1;' \
+            '' \
+            '# import functions/variables and setup patching (DO NOT REMOVE)' \
+            '. tools/ak3-core.sh;' \
+            '' \
+            "ui_print \"Flashing Flavenz Kernel (ack-full+AutoFDO)...\";" \
+            'split_boot;' \
+            'flash_boot;' \
+            > anykernel.sh
+          cp ../kernel/out/arch/arm64/boot/Image ./Image
+          zip -r9 "${ZIPPATH}" . -x "*.git*" "LICENSE.txt" > /dev/null
+          [ -s "${ZIPPATH}" ] || { echo "::error::zip not created"; exit 1; }
+          ls -lh "${ZIPPATH}"
+
+      - name: Upload AutoFDO build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: peridot-ack-full-autofdo-${{ github.run_id }}
+          path: |
+            Peridot-Kernel-ACK-AutoFDO-*.zip
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload debug artifacts (Image + config + build log)
+        uses: actions/upload-artifact@v4
+        with:
+          name: autofdo-debug-${{ github.run_id }}
+          path: |
+            kernel/out/arch/arm64/boot/Image
+            kernel/out/.config
+          if-no-files-found: warn
+          retention-days: 14
