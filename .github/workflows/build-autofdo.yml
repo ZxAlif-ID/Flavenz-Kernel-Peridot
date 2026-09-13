@@ -356,3 +356,74 @@ jobs:
             kernel/out/.config
           if-no-files-found: warn
           retention-days: 14
+
+  prerelease:
+    name: Publish AutoFDO prerelease (Flavenz-YYYYMMDD-afdo)
+    needs: [build]
+    # Opsi (a) keputusan user 2026-09-13: dua jalur release — tag Flavenz-YYYYMMDD
+    # (stabil proven, dari build-droidspaces.yml) + tag Flavenz-YYYYMMDD-afdo
+    # (prerelease pengembangan, dari sini). Prerelease TIDAK PERNAH jadi "Latest"
+    # (--prerelease; pola Theettam: compile-verified != boot-tested).
+    if: ${{ !cancelled() && needs.build.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - name: Download built zip
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Publish prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PROFILE_URL: ${{ github.event.inputs.profile_url }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          cd artifacts
+          ls -lh
+          ZIP=$(ls Peridot-Kernel-ACK-AutoFDO-*-droidspaces-*.zip | head -n1)
+          DATE=$(echo "${ZIP}" | grep -oE '[0-9]{8}' | tail -n1)
+          TAG="Flavenz-${DATE}-afdo"
+          sha256sum "${ZIP}" > SHA256SUMS.txt
+          if [ -n "${PROFILE_URL}" ]; then
+            MODE="AutoFDO final — profil device terpasang (CLANG_AUTOFDO_PROFILE)"
+          else
+            MODE="plumbing-only — tanpa profil (metadata dwarf/fs-discriminator saja, belum ada tuning performa)"
+          fi
+          {
+            echo "## Flavenz Kernel AutoFDO (prerelease pengembangan) — ${DATE}"
+            echo ""
+            echo "Mode build: ${MODE}"
+            echo ""
+            echo "- Base: ACK android14-6.1 @ \`0c3d559bcd85\` + defconfig Mohithash + KSU Next v3.3.0 + SUSFS v2.1.0 + Droidspaces"
+            echo "- AutoFDO: backport upstream \`315ad8780a\` (P1 plumbing)"
+            echo "- Banner uname tetap pola proven \`6.1.138-android14-11\` (anti-deteksi utuh)"
+            echo ""
+            echo "### Peringatan (WAJIB dibaca)"
+            echo "> COMPILE-VERIFIED != BOOT-TESTED. Zip ini belum tentu pernah di-boot."
+            echo "> WAJIB uji via \`fastboot boot fla-boot.img\` (RAM-only) sebelum flash."
+            echo "> Kasus Guidix 2026-09-13: jangan flash build belum-teruji langsung."
+            echo "> Backup boot & init_boot dulu. Project pribadi, AS-IS tanpa garansi."
+            echo ""
+            echo "Versi stabil proven: tag \`Flavenz-${DATE}\` (tanpa AutoFDO)."
+            echo ""
+            echo "CI run: ${RUN_URL}"
+          } > body.md
+          if gh release view "${TAG}" -R "${GITHUB_REPOSITORY}" > /dev/null 2>&1; then
+            echo "Release ${TAG} sudah ada — hapus dulu (idempotent)"
+            gh release delete "${TAG}" -R "${GITHUB_REPOSITORY}" --yes --cleanup-tag
+          fi
+          gh release create "${TAG}" \
+            -R "${GITHUB_REPOSITORY}" \
+            --prerelease \
+            --target "${GITHUB_SHA}" \
+            --title "Flavenz Kernel Peridot AutoFDO — ${TAG}" \
+            --notes-file body.md \
+            "${ZIP}" SHA256SUMS.txt
+          echo "=== prerelease terbit ==="
+          gh release view "${TAG}" -R "${GITHUB_REPOSITORY}" --json name,tagName,isPrerelease,isLatest,assets \
+            --jq '"\(.name) [\(.tagName)] prerelease=\(.isPrerelease) latest=\(.isLatest) assets: " + ([.assets[].name] | join(", "))'
