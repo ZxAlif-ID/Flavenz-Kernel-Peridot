@@ -22,12 +22,15 @@
 
 **Flavenz Kernel** is a custom kernel for the **Xiaomi POCO F6 / Redmi Turbo 3** (`peridot`), powered by the Qualcomm Snapdragon 8s Gen 3 (SM8635) chipset.
 
-It is built in **two flavors** via a single GitHub Actions matrix pipeline:
+It is built from a single GitHub Actions pipeline in one flavor:
 
 | Flavor | Base | Description |
 |---|---|---|
-| **guidix-full** | `GuidixX/kernel_xiaomi_sm8635` branch `16.2` (ACK + Qualcomm CLO) | Closest to stock, proven to boot on peridot |
 | **ack-full** | ACK `android14-6.1-lts` @ `0c3d559bcd85` + defconfigs from `Mohithash/kernel_xiaomi_sm8635` branch `17` | Pure Android Common Kernel |
+
+> The former **guidix-full** flavor (GuidixX 16.2 base) was **removed on 2026-09-13**: it
+> bootlooped on-device (see `logs/recovery_20260913.log`). The `ack-full` flavor is the
+> boot-verified one.
 
 Unlike kernels bloated with experimental, unstable patches (BORE, ADIOS, or unnecessary CPU schedulers), Flavenz Kernel stays clean. It prioritizes pure gaming throughput, thermal efficiency, rock-solid stability, and advanced container/root capabilities without compromising stock reliability.
 
@@ -35,7 +38,7 @@ Unlike kernels bloated with experimental, unstable patches (BORE, ADIOS, or unne
 
 ## 🔥 Key Features
 
-- **GKI 6.1 Base**: `6.1.138-android14-11` — stock-compatible, with Qualcomm CLO hardware integration on the Guidix flavor.
+- **GKI 6.1 Base**: `6.1.138-android14-11` — stock-compatible, pure GKI.
 - **KernelSU Next (v3.3.0)**: Integrated root solution (pershoot `dev-susfs` branch — SUSFS hooks built-in) via init_boot (GKI mode).
 - **SUSFS (v2.1.0)**: Advanced root hiding and mount point concealment, ensuring seamless banking and integrity app compatibility.
 - **Native Droidspaces Support**: Full containerization enablement (`CONFIG_PID_NS`, `CONFIG_IPC_NS`, `CONFIG_SYSVIPC` with kABI relocation patch for GKI 6.1) for running isolated gaming environments.
@@ -51,7 +54,7 @@ Flavenz-Kernel-Peridot/
 ├── .github/
 │   ├── ISSUE_TEMPLATE/              # Bug report + feature request templates
 │   └── workflows/
-│       ├── build-droidspaces.yml    # Build matrix: guidix-full vs ack-full (workflow_dispatch)
+│       ├── build-droidspaces.yml    # Build kernel ACK, single flavor (workflow_dispatch)
 │       └── compare-kernel-zips.yml  # One-shot zip comparison (template vs release vs upstream)
 ├── anykernel/                        # Vendored AnyKernel3 tree (workflow regenerates anykernel.sh per-flavor at package time)
 ├── docs/
@@ -95,7 +98,6 @@ thermal/battery data and the live HTML report: **[docs/benchmark/benchmark-ack.m
 
 Every successful build automatically publishes a **GitHub Release** (`Flavenz-YYYYMMDD`) containing:
 
-- `Peridot-Kernel-Guidix-…-YYYYMMDD.zip` (guidix-full) — raw flashable zip
 - `Peridot-Kernel-ACK-…-YYYYMMDD.zip` (ack-full) — raw flashable zip
 - `SHA256SUMS.txt` — checksums to verify integrity before flashing
 
@@ -109,7 +111,6 @@ Zips are also uploaded as run artifacts (**Actions** → latest green run → Ar
 
 ### Zip Naming
 
-- `Peridot-Kernel-Guidix-KSUNext-v3.3.0-SUSFS-v2.1.0-droidspaces-YYYYMMDD.zip`
 - `Peridot-Kernel-ACK-KSUNext-v3.3.0-SUSFS-v2.1.0-droidspaces-YYYYMMDD.zip`
 
 ---
@@ -130,9 +131,9 @@ Zips are also uploaded as run artifacts (**Actions** → latest green run → Ar
 This repository includes a fully automated GitHub Actions workflow (`.github/workflows/build-droidspaces.yml`):
 
 - Triggered manually via **workflow_dispatch** (Actions → Run workflow).
-- Matrix of **2 parallel jobs**: `guidix-full` and `ack-full`.
+- Matrix of **1 job**: `ack-full` (the former `guidix-full` flavor was removed on 2026-09-13 — bootloop on-device).
 - Steps: free disk space → install dependencies → setup Neutron Clang (with antman glibc patch) → clone kernel source per flavor → apply Droidspaces + ThinLTO configs → apply SYSVIPC kABI patch → setup KernelSU Next v3.3.0 → setup SUSFS v2.1.0 → build (`Image`, `Image.gz`, `dtbs`) with a **ROM-synced build timestamp** (`rom_build_date` input — keeps `uname -a` aligned with the ROM's build date so integrity checkers like Duck Detector report no drift) → package AnyKernel3 ZIP (vendored `anykernel/` tree + generated `anykernel.sh`) → upload artifact.
-- **Release job**: after both matrix jobs succeed, a `release` job publishes the raw flashable zips + `SHA256SUMS.txt` to GitHub Releases (tag `Flavenz-YYYYMMDD`) with full release notes — no zip-in-zip.
+- **Release job**: after the matrix job succeeds, a `release` job publishes the raw flashable zip + `SHA256SUMS.txt` to GitHub Releases (tag `Flavenz-YYYYMMDD`) with full release notes — no zip-in-zip.
 
 See `docs/kernel-context.md` (or its [English translation](docs/kernel-context.en.md)) for the full technical breakdown and the error-fix log.
 
@@ -168,7 +169,7 @@ See `docs/kernel-context.md` (or its [English translation](docs/kernel-context.e
 
 - **Google**: Android Common Kernel (ACK)
 - **Qualcomm**: SM8635 platform sources
-- **GuidixX / Mohithash**: peridot kernel sources & defconfigs
+- **Mohithash**: peridot defconfig
 - **KernelSU Next Team**: KSUNext implementation
 - **simonpunk**: SUSFS root concealment framework
 - **ravindu644 / Droidspaces**: Container namespace architecture & kABI patches
@@ -180,7 +181,7 @@ See `docs/kernel-context.md` (or its [English translation](docs/kernel-context.e
 
 Distributed under the **GNU General Public License v2.0** — see [LICENSE](LICENSE).
 Kernel sources belong to their respective upstream projects (Google ACK,
-Qualcomm CodeLinaro, Xiaomi MiCode, GuidixX, KernelSU Next, SUSFS).
+Qualcomm CodeLinaro, Xiaomi MiCode, KernelSU Next, SUSFS).
 
 ## ⚖️ Verified on
 

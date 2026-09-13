@@ -4,6 +4,19 @@ All notable changes to this repository. Build releases are tagged
 `Flavenz-YYYYMMDD` — see [Releases](https://github.com/ZxAlif-ID/Flavenz-Kernel-Peridot/releases).
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2026-09-13] — guidix-full flavor removed
+### Removed
+- **The `guidix-full` flavor (GuidixX 16.2 base) is gone**: the Guidix zip
+  BOOTLOOPED on-device (user report, evidence: `logs/recovery_20260913.log`;
+  device recovered by restoring boot/dtbo/init_boot/vendor_boot + re-flashing
+  the NexiunOS ROM).
+- Both `Peridot-Kernel-Guidix-…zip` assets deleted from Releases
+  `Flavenz-20260908` and `Flavenz-20260910`.
+### Changed
+- `build-droidspaces.yml`: single-flavor matrix (`ack-full` only); release
+  count guard 2 → 1; release notes updated.
+- READMEs + `docs/kernel-context.md`/`.en.md` synced (bilingual policy).
+
 ## [2026-09-12] — Repository & docs
 ### Added
 - Community standards files: CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, CITATION.cff,

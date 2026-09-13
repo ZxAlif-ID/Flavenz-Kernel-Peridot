@@ -1,10 +1,10 @@
-name: Build Kernel - Peridot (Guidix vs ACK Matrix)
+name: Build Kernel - Peridot (ACK)
 
 on:
   workflow_dispatch:
     inputs:
       trigger:
-        description: "Trigger Guidix vs ACK Kernel Build Matrix"
+        description: "Trigger ACK Kernel Build"
         required: false
         default: "all"
       rom_build_date:
@@ -18,7 +18,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        flavor: [guidix-full, ack-full]
+        # guidix-full DIHAPUS 2026-09-13: bootloop on-device (logs/recovery_20260913.log).
+        # ack-full satu-satunya flavor (boot-verified, release Flavenz-20260910).
+        flavor: [ack-full]
     permissions:
       contents: write
     env:
@@ -104,14 +106,6 @@ jobs:
             echo "antman attempt $i failed; retrying in $((i*20))s"; sleep $((i*20))
           done
           echo "$HOME/clang/bin" >> $GITHUB_PATH
-
-      - name: Clone Guidix Source
-        if: ${{ matrix.flavor == 'guidix-full' }}
-        run: |
-          rm -rf kernel
-          git clone --depth=1 -b 16.2 \
-            https://github.com/GuidixX/kernel_xiaomi_sm8635 \
-            kernel
 
       - name: Clone Pure ACK Source + Defconfig
         if: ${{ matrix.flavor == 'ack-full' }}
@@ -264,9 +258,7 @@ jobs:
           # oleh step BERIKUTNYA, jadi sebelumnya ${ZIPPATH} kosong di step ini:
           # `zip -r9 "" ...` exit 0 dan menulis file tersembunyi `.zip`, step
           # tampak sukses, tapi tidak ada zip yang di-upload.
-          if [ "${FLAVOR}" = "guidix-full" ]; then
-            ZIPNAME="Peridot-Kernel-Guidix-KSUNext-${KERNELSU_VERSION}-SUSFS-${SUSFS_VERSION}-droidspaces-${DATE}.zip"
-          elif [ "${FLAVOR}" = "ack-full" ]; then
+          if [ "${FLAVOR}" = "ack-full" ]; then
             ZIPNAME="Peridot-Kernel-ACK-KSUNext-${KERNELSU_VERSION}-SUSFS-${SUSFS_VERSION}-droidspaces-${DATE}.zip"
           else
             echo "::error::Unknown FLAVOR '${FLAVOR}'"; exit 1
@@ -337,7 +329,7 @@ jobs:
   release:
     name: Publish to GitHub Releases
     needs: [build]
-    # release hanya jika kedua job matrix sukses: needs membuat job ini menunggu
+    # release hanya jika job matrix sukses: needs membuat job ini menunggu
     # SEMUA kombinasi matrix selesai; jika ada yang gagal, job ini tidak jalan.
     if: ${{ !cancelled() && needs.build.result == 'success' }}
     runs-on: ubuntu-24.04
@@ -381,8 +373,8 @@ jobs:
           echo "=== zip flashable di artifacts/ ==="
           ls -lh artifacts/
           COUNT=$(find artifacts -maxdepth 1 -name 'Peridot-Kernel-*.zip' | wc -l)
-          if [ "${COUNT}" -ne 2 ]; then
-            echo "::error::expected exactly 2 flashable zips, found ${COUNT}"; exit 1
+          if [ "${COUNT}" -ne 1 ]; then
+            echo "::error::expected exactly 1 flashable zip, found ${COUNT}"; exit 1
           fi
           cd artifacts
           # checksum untuk verifikasi integritas sebelum flash
@@ -394,11 +386,10 @@ jobs:
             echo "REL_BODY<<RELEASE_EOF"
             echo "## Flavenz Kernel for POCO F6 (Peridot) — build ${DATE}"
             echo ""
-            echo "Dua zip flashable AnyKernel3 (pilih salah satu flavor):"
+            echo "Satu zip flashable AnyKernel3 (ack-full):"
             echo ""
             echo "| Flavor | Base |"
             echo "|---|---|"
-            echo "| \`guidix-full\` | GuidixX 16.2 (ACK + Qualcomm CLO) — closest to stock, proven boot |"
             echo "| \`ack-full\` | ACK android14-6.1 @ \`0c3d559bcd85\` + defconfig Mohithash |"
             echo ""
             echo "### Isi (tanpa zip dalam zip — langsung flashable)"

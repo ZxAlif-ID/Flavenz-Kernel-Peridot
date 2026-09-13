@@ -12,7 +12,7 @@ labels:
 - Android version:
 
 **Kernel build**
-- Flavor: `guidix-full` / `ack-full`
+- Flavor: `ack-full` (guidix-full was removed on 2026-09-13)
 - Release tag or zip name:
 - CI run link (if relevant):
 

@@ -15,7 +15,7 @@ Be specific — a config option, a patch, a workflow step, or a docs change.
 **Constraints**
 - Stock-like stability is a hard requirement: no experimental schedulers
   (BORE/ADIOS), no unstable tweaks.
-- Changes must be verifiable in CI (`guidix-full` / `ack-full` matrix) or
+- Changes must be verifiable in CI (`ack-full` build) or
   through a documented on-device test.
 
 **Alternatives considered**

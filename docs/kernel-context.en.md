@@ -31,14 +31,14 @@ Based on deep research + Gemini AI confirmation + official Android documentation
 
 ### Peridot kernel hierarchy:
 1. **Pure ACK** = cannot boot on peridot without device tree/CLO — not practical
-2. **GuidixX 16.2** = ACK + Qualcomm CLO = closest to stock, proven boot on peridot ← used for flavor **guidix-full**
+2. **GuidixX 16.2** = ACK + Qualcomm CLO = closest to stock, proven boot on peridot ← used for flavor **guidix-full** — **FLAVOR REMOVED 2026-09-13: BOOTLOOP on-device** (see `logs/recovery_20260913.log`)
 3. **MiCode peridot-u-oss** = official Xiaomi source (most accurate) but needs Bazel + multi-repo sync (not practical on GitHub Actions)
 4. **Peridot-Development/kernel_xiaomi_peridot** = pure MiCode mirror, branch `peridot-u-oss`, last update July 2026
 
 ### Important repos found:
 - `MiCode/Xiaomi_Kernel_OpenSource` branch `peridot-u-oss` — official Xiaomi source
 - `Peridot-Development/kernel_xiaomi_peridot` branch `peridot-u-oss` — active MiCode mirror
-- `GuidixX/kernel_xiaomi_sm8635` branch `16.2` — ACK + CLO, proven → base of flavor **guidix-full**
+- `GuidixX/kernel_xiaomi_sm8635` branch `16.2` — ACK + CLO, proven → ~~base of flavor **guidix-full**~~ (flavor removed 2026-09-13, bootloop on-device)
 - `Mohithash/kernel_xiaomi_sm8635` branch `17` — ACK + CLO + BORE/ADIOS (contains tweaks); used only as **source of defconfig + anykernel**, not as a base
 - `ZxAlif-ID/Kernel_F6` — **private fork** of `Mohithash/kernel_xiaomi_sm8635`, branch `main`; used as the **AnyKernel3** source in the workflow (DEPRECATED — see the note below)
 
@@ -87,11 +87,11 @@ CONFIG_KALLSYMS=y / CONFIG_KALLSYMS_ALL=y
 
 ## Current Workflow Flow (build-droidspaces.yml)
 - **Trigger**: `workflow_dispatch` (manual, Actions → Run workflow)
-- **Matrix of 2 parallel jobs** (`fail-fast: false`):
-  1. **guidix-full** — clone `GuidixX/kernel_xiaomi_sm8635` branch `16.2`
-  2. **ack-full** — clone ACK `kernel/common` @ `0c3d559bcd85` + defconfig from `Mohithash/kernel_xiaomi_sm8635` (dynamic branch fallback: `17` → `main` → `theettam-2.8` → `theettam-2.7`)
+- **Matrix of 1 job** (`fail-fast: false`) — since 2026-09-13:
+  1. **ack-full** — clone ACK `kernel/common` @ `0c3d559bcd85` + defconfig from `Mohithash/kernel_xiaomi_sm8635` (dynamic branch fallback: `17` → `main` → `theettam-2.8` → `theettam-2.7`)
+  - ~~**guidix-full** — clone `GuidixX/kernel_xiaomi_sm8635` branch `16.2`~~ → **REMOVED 2026-09-13**: bootlooped on-device after flashing the Guidix zip (recovery restored boot/dtbo/init_boot/vendor_boot from backup + re-flashed the NexiunOS ROM — device saved). Guidix zips deleted from all Releases.
 - Common steps: free disk space → install dependencies (bc, bison, flex, libssl, cpio, pahole, lz4, zstd, gcc-aarch64-linux-gnu, etc.) → setup Neutron Clang 30062026 + antman glibc patch → apply Droidspaces & container configs → apply kABI SYSVIPC patch → setup KernelSU Next v3.3.0 (pershoot/dev-susfs) → setup SUSFS v2.1.0 → build (`gki_defconfig` [+ `vendor/peridot_GKI.config`], `Image Image.gz dtbs`) → **Package AnyKernel3** → upload artifact
-- Output: artifact per run + **automatic `release` job** — after both matrix jobs succeed, raw flashable zips + `SHA256SUMS.txt` are published as **GitHub Releases** assets (tag `Flavenz-YYYYMMDD`) with full notes; no zip-in-zip (release assets are never wrapped, unlike Actions artifacts)
+- Output: artifact per run + **automatic `release` job** — after the matrix job succeeds, the raw flashable zip + `SHA256SUMS.txt` are published as **GitHub Releases** assets (tag `Flavenz-YYYYMMDD`) with full notes; no zip-in-zip (release assets are never wrapped, unlike Actions artifacts)
 - Deterministic build: `KBUILD_BUILD_USER/HOST` pinned; `KBUILD_BUILD_TIMESTAMP` **dynamic** from the `rom_build_date` input (synced to the ROM's `ro.build.date` — fixes Duck Detector build-time drift, see the error table)
 
 ### Package AnyKernel3 — AK3 source
@@ -103,8 +103,7 @@ CONFIG_KALLSYMS=y / CONFIG_KALLSYMS_ALL=y
 
 ## Output ZIP (artifact per flavor)
 ```
-Peridot-Kernel-Guidix-KSUNext-v3.3.0-SUSFS-v2.1.0-droidspaces-YYYYMMDD.zip   (guidix-full)
-Peridot-Kernel-ACK-KSUNext-v3.3.0-SUSFS-v2.1.0-droidspaces-YYYYMMDD.zip       (ack-full)
+Peridot-Kernel-ACK-KSUNext-v3.3.0-SUSFS-v2.1.0-droidspaces-YYYYMMDD.zip       (ack-full; guidix-full REMOVED 2026-09-13)
 ```
 
 ## Toolchain
@@ -169,6 +168,7 @@ Peridot-Kernel-ACK-KSUNext-v3.3.0-SUSFS-v2.1.0-droidspaces-YYYYMMDD.zip       (a
 5. **Workflow `compare-kernel-zips.yml`** (`22fa2dd`, run 34290247236 success): one-shot comparison of `template/Kernel-Peridot-Fix.zip` (user-proven) vs our release zip vs Mohithash v2.8 → report auto-committed to `logs/zip-comparison-<timestamp>.md`. Key result: template = pure Mohithash AK3 + its own Image; our zip is **compatible with the template (PASS ×4)**; AK3 upstream is now `20260904` (ours `20231020`, upstream still lacks bootconfig → keep the patch).
 6. **Duck Detector build-time-drift fix** (2026-09-10, commit `7e5880b`): the kernel build timestamp is now derived from the ROM's `ro.build.date` via the `rom_build_date` input (default `2026-07-01`) — uname -a is synced with the system, the "build time drift / mismatch" anomaly is gone. Droidspaces **full requirements confirmed via the user's flash test** (injected into AK3 Theettam, boot OK). **Verified by run 34425680767 (3 green jobs)** → Release `Flavenz-20260910`: `strings Image` from the DOWNLOADED zips shows `#1 SMP PREEMPT Wed Jul  1 00:00:00 UTC 2026` on both flavors (no more `Sep  7 2026`), `sha256sum -c` OK/OK.
 7. **FLASH VERIFICATION — COMPLETE (2026-09-11/12, user report)**: the `ack-full` zip from Release `Flavenz-20260910` was flashed STRAIGHT from the release asset (no injection into another AK3) → **boots OK, stable, no performance issues**. Duck Detector: the "build time drift" anomaly is **gone** (kernel timestamp = ROM build date). Droidspaces checklist = **full requirement** ✅. AnTuTu V12.0.1 benchmark (ack-full): 1,644,070 (no cooler) → 1,813,737 (cooler, +10.3%); details in `docs/benchmark/benchmark-ack.md` + the live report in `media/ack-build-kernel/Antutu-Ack.html`. When the ROM is updated: re-dispatch with the new `ro.build.date.utc`.
+8. **guidix-full FLAVOR REMOVAL (2026-09-13, user report)**: the Guidix zip `Peridot-Kernel-Guidix-...-droidspaces-*.zip` **BOOTLOOPED** on the user's NexiunOS V5 ROM (evidence: `logs/recovery_20260913.log` — device was saved by restoring the boot/dtbo/init_boot/vendor_boot backup + re-flashing the NexiunOS ROM from OrangeFox). Actions taken: (1) both Guidix zip assets deleted from Releases `Flavenz-20260908` & `Flavenz-20260910`; (2) build-droidspaces.yml → single-flavor matrix (`ack-full` only), COUNT guard 2→1, release notes updated; (3) docs/READMEs synced. Root-cause note: GuidixX 16.2's "proven boot" does not hold on the user's port ROM combination — the CLO base clashes with the NexiunOS vendor. ack-full (pure ACK + Mohithash defconfig) remains the only flavor.
 
 ## PENDING — Study & Mirror `build-theettam.yml` (Mohithash) as the Workflow Reference
 **Reference source (do NOT modify it, purely study the pattern)**: https://github.com/Mohithash/kernel_xiaomi_sm8635/blob/theettam-2.8/.github/workflows/build-theettam.yml (also on branches `17` & `master`; supporting files: `scripts/ci/build-flavor.sh`, `scripts/ci/pins.env`, `scripts/ci/kmi-baseline/`)
@@ -184,7 +184,7 @@ What makes it "work very well" (analysis of 2026-09-08):
 8. **Separate & explicit release** — the `release` job only runs when dispatching with `release=true`; results are ALWAYS `prerelease: true` + `make_latest: false` with a "compile-verified ≠ boot-tested" disclaimer in the body.
 9. **Pins in `scripts/ci/pins.env`** — all versions (toolchain, KSU, SUSFS) in one env file, not scattered across YAML.
 
-**How we mirror it (WITHOUT modifying Mohithash's workflow — only adopting the patterns into our workflow; bases stay pure ACK & GuidixX, Flavenz flavors: `guidix-full`/`ack-full`)**:
+**How we mirror it (WITHOUT modifying Mohithash's workflow — only adopting the patterns into our workflow; base pure ACK, Flavenz flavor: `ack-full`; `guidix-full` removed 2026-09-13)**:
 - [ ] Extract build logic into `scripts/ci/build-flavor.sh` (one script per flavor, used by CI & local)
 - [ ] Pin + checksum Neutron clang & antman in env (add `NEUTRON_SHA256`, `ANTMAN_SHA256`)
 - [ ] Add a `plan` job → dynamic matrix from output (slot for new flavors without YAML edits)
@@ -195,10 +195,10 @@ What makes it "work very well" (analysis of 2026-09-08):
 - [ ] Release: keep our existing `release` job (already working), add the `prerelease` pattern when a build is not yet boot-tested
 
 ## Next Decision Point
-Both base options are implemented as a matrix:
-- **guidix-full** = Option A (GuidixX 16.2 — ACK + CLO, proven boot)
-- **ack-full** = Option B (pure ACK + Mohithash defconfig)
-Remaining verification comes from build results: if one flavor errors or underperforms, it can be dropped from the matrix without touching the other (`fail-fast: false`).
+The matrix is down to one option (as of 2026-09-13):
+- ~~**guidix-full** = Option A (GuidixX 16.2 — ACK + CLO, proven boot)~~ → **REMOVED: bootloop on-device** (logs/recovery_20260913.log) — GuidixX's "proven boot" does not hold on the user's NexiunOS V5 port
+- **ack-full** = Option B (pure ACK + Mohithash defconfig) — **boot-verified** on the user's ROM (release Flavenz-20260910)
+If another base is worth trying later, add it as a new matrix flavor and verify boot BEFORE publishing.
 
 ## Key References
 - Droidspaces config guide: `ravindu644/Droidspaces-OSS/blob/main/Documentation/Kernel-Configuration.md`

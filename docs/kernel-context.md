@@ -28,14 +28,14 @@ Berdasarkan riset mendalam + konfirmasi Gemini AI + dokumentasi Android resmi:
 
 ### Hierarki kernel peridot:
 1. **ACK murni** = tidak bisa boot di peridot tanpa device tree/CLO — tidak practical
-2. **GuidixX 16.2** = ACK + CLO Qualcomm = lebih dekat ke stock, proven boot di peridot ← dipakai untuk flavor **guidix-full**
+2. **GuidixX 16.2** = ACK + CLO Qualcomm = lebih dekat ke stock, proven boot di peridot ← dipakai untuk flavor **guidix-full** — **FLAVOR DIHAPUS 2026-09-13: BOOTLOOP on-device** (lihat `logs/recovery_20260913.log`)
 3. **MiCode peridot-u-oss** = source resmi Xiaomi (paling akurat) tapi butuh Bazel + multi-repo sync (tidak practical di GitHub Actions)
 4. **Peridot-Development/kernel_xiaomi_peridot** = pure mirror MiCode, branch `peridot-u-oss`, last update July 2026
 
 ### Repo penting yang ditemukan:
 - `MiCode/Xiaomi_Kernel_OpenSource` branch `peridot-u-oss` — source resmi Xiaomi
 - `Peridot-Development/kernel_xiaomi_peridot` branch `peridot-u-oss` — mirror MiCode aktif
-- `GuidixX/kernel_xiaomi_sm8635` branch `16.2` — ACK + CLO, proven → base flavor **guidix-full**
+- `GuidixX/kernel_xiaomi_sm8635` branch `16.2` — ACK + CLO, proven → ~~base flavor **guidix-full**~~ (flavor dihapus 2026-09-13, bootloop on-device)
 - `Mohithash/kernel_xiaomi_sm8635` branch `17` — ACK + CLO + BORE/ADIOS (ada tweak); dipakai hanya sebagai **sumber defconfig + anykernel**, bukan sebagai base
 - `ZxAlif-ID/Kernel_F6` — **fork pribadi** dari `Mohithash/kernel_xiaomi_sm8635`, branch `main`; dipakai sebagai sumber **AnyKernel3** di workflow
 
@@ -84,11 +84,11 @@ CONFIG_KALLSYMS=y / CONFIG_KALLSYMS_ALL=y
 
 ## Alur Workflow Saat Ini (build-droidspaces.yml)
 - **Trigger**: `workflow_dispatch` (manual, Actions → Run workflow)
-- **Matrix 2 job paralel** (`fail-fast: false`):
-  1. **guidix-full** — clone `GuidixX/kernel_xiaomi_sm8635` branch `16.2`
-  2. **ack-full** — clone ACK `kernel/common` @ `0c3d559bcd85` + defconfig dari `Mohithash/kernel_xiaomi_sm8635` (dynamic branch fallback: `17` → `main` → `theettam-2.8` → `theettam-2.7`)
+- **Matrix 1 job** (`fail-fast: false`) — sejak 2026-09-13:
+  1. **ack-full** — clone ACK `kernel/common` @ `0c3d559bcd85` + defconfig dari `Mohithash/kernel_xiaomi_sm8635` (dynamic branch fallback: `17` → `main` → `theettam-2.8` → `theettam-2.7`)
+  - ~~**guidix-full** — clone `GuidixX/kernel_xiaomi_sm8635` branch `16.2`~~ → **DIHAPUS 2026-09-13**: bootloop on-device setelah flash zip Guidix (recovery restore boot/dtbo/init_boot/vendor_boot dari backup, ROM NexiunOS masuk lagi — device selamat). Zip Guidix dihapus dari semua Release.
 - Step umum: free disk space → install deps (bc, bison, flex, libssl, cpio, pahole, lz4, zstd, gcc-aarch64-linux-gnu, dll) → setup Neutron Clang 30062026 + antman glibc patch → apply Droidspaces & container configs → apply kABI SYSVIPC patch → setup KernelSU Next v3.3.0 (pershoot/dev-susfs) → setup SUSFS v2.1.0 → build (`gki_defconfig` [+ `vendor/peridot_GKI.config`], `Image Image.gz dtbs`) → **Package AnyKernel3** → upload artifact
-- Output: artifact per run + **job `release` otomatis** — setelah kedua job matrix sukses, zip flashable mentah + `SHA256SUMS.txt` diterbitkan sebagai aset **GitHub Releases** (tag `Flavenz-YYYYMMDD`) lengkap dengan deskripsi; tanpa zip dalam zip (aset release tidak dibungkus zip, berbeda dari artifact Actions)
+- Output: artifact per run + **job `release` otomatis** — setelah job matrix sukses, zip flashable mentah + `SHA256SUMS.txt` diterbitkan sebagai aset **GitHub Releases** (tag `Flavenz-YYYYMMDD`) lengkap dengan deskripsi; tanpa zip dalam zip (aset release tidak dibungkus zip, berbeda dari artifact Actions)
 - Deterministic build: `KBUILD_BUILD_USER/HOST` di-pin; `KBUILD_BUILD_TIMESTAMP` **dinamis** dari input `rom_build_date` (sinkron `ro.build.date` ROM — fix Duck Detector build-time drift, lihat tabel error)
 
 ### Package AnyKernel3 — sumber AK3
@@ -100,8 +100,7 @@ CONFIG_KALLSYMS=y / CONFIG_KALLSYMS_ALL=y
 
 ## Output ZIP (artifact per flavor)
 ```
-Peridot-Kernel-Guidix-KSUNext-v3.3.0-SUSFS-v2.1.0-droidspaces-YYYYMMDD.zip   (guidix-full)
-Peridot-Kernel-ACK-KSUNext-v3.3.0-SUSFS-v2.1.0-droidspaces-YYYYMMDD.zip       (ack-full)
+Peridot-Kernel-ACK-KSUNext-v3.3.0-SUSFS-v2.1.0-droidspaces-YYYYMMDD.zip       (ack-full; guidix-full DIHAPUS 2026-09-13)
 ```
 
 ## Toolchain
@@ -165,7 +164,8 @@ Peridot-Kernel-ACK-KSUNext-v3.3.0-SUSFS-v2.1.0-droidspaces-YYYYMMDD.zip       (a
 4. **Docs & disclaimer + LICENSE GPLv2** (`2f03c17`, `010c8df`): README Disclaimer (project pribadi, AS-IS, tanggung jawab masing-masing, keamanan tidak dijamin), section Downloads ditulis ulang (Releases = 1 zip langsung; artifacts = dibungkus zip luar), error log sinkron.
 5. **Workflow `compare-kernel-zips.yml`** (`22fa2dd`, run 34290247236 sukses): one-shot perbandingan `template/Kernel-Peridot-Fix.zip` (proven user) vs release zip vs Mohithash v2.8 → laporan otomatis di-commit ke `logs/zip-comparison-<timestamp>.md`. Hasil kunci: template = AK3 Mohithash murni + Image sendiri; zip kita **kompatibel dengan template (PASS ×4)**; AK3 upstream kini `20260904` (kita `20231020`, upstream BELUM punya bootconfig → pertahankan patch).
 6. **Fix Duck Detector build time drift** (2026-09-10, commit `7e5880b`): timestamp build kernel kini diturunkan dari `ro.build.date` ROM via input `rom_build_date` (default `2026-07-01`) — uname -a sinkron dengan system, anomali "build time drift / mismatch" hilang. Droidspaces **full requirement terkonfirmasi via flash test user** (diinjeksi ke AK3 Theettam, boot OK). **Terverifikasi run 34425680767 (3 job hijau)** → Release `Flavenz-20260910`: `strings Image` dari zip yang DIUNDUH menunjukkan `#1 SMP PREEMPT Wed Jul  1 00:00:00 UTC 2026` di kedua flavor (tidak ada lagi `Sep  7 2026`), `sha256sum -c` OK/OK.
-7. **VERIFIKASI FLASH — TUNTAS (2026-09-11/12, laporan user)**: zip `ack-full` dari Release `Flavenz-20260910` di-flash LANGSUNG dari asset release (tanpa injeksi ke AK3 lain) → **boot OK, stabil, tidak ada masalah performa**. Duck Detector: anomali "build time drift" **hilang** (timestamp kernel = tanggal build ROM). Checklist Droidspaces = **full requirement** ✅. Benchmark AnTuTu V12.0.1 (ack-full): 1.644.070 (tanpa cooler) → 1.813.737 (cooler, +10,3%); detail di [`docs/benchmark/benchmark-ack.md`](benchmark/benchmark-ack.md) + laporan live di `media/ack-build-kernel/Antutu-Ack.html`. Saat ROM di-update: dispatch ulang dengan `ro.build.date.utc` yang baru. |
+7. **VERIFIKASI FLASH — TUNTAS (2026-09-11/12, laporan user)**: zip `ack-full` dari Release `Flavenz-20260910` di-flash LANGSUNG dari asset release (tanpa injeksi ke AK3 lain) → **boot OK, stabil, tidak ada masalah performa**. Duck Detector: anomali "build time drift" **hilang** (timestamp kernel = tanggal build ROM). Checklist Droidspaces = **full requirement** ✅. Benchmark AnTuTu V12.0.1 (ack-full): 1.644.070 (tanpa cooler) → 1.813.737 (cooler, +10,3%); detail di [`docs/benchmark/benchmark-ack.md`](benchmark/benchmark-ack.md) + laporan live di `media/ack-build-kernel/Antutu-Ack.html`. Saat ROM di-update: dispatch ulang dengan `ro.build.date.utc` yang baru.
+8. **PENGHAPUSAN FLAVOR guidix-full (2026-09-13, laporan user)**: zip Guidix `Peridot-Kernel-Guidix-...-droidspaces-*.zip` **BOOTLOOP** di ROM NexiunOS V5 user (bukti: `logs/recovery_20260913.log` — device diselamatkan via restore backup boot/dtbo/init_boot/vendor_boot + reflash ROM NexiunOS dari OrangeFox). Tindakan: (1) kedua asset zip Guidix dihapus dari Release `Flavenz-20260908` & `Flavenz-20260910`; (2) workflow build-droidspaces.yml → matrix 1 flavor (`ack-full` saja), guard COUNT 2→1, notes release diupdate; (3) docs/README sinkron. Catatan akar masalah: "proven boot" GuidixX 16.2 tidak berlaku untuk kombinasi ROM port user — base CLO vs vendor NexiunOS tidak cocok. ack-full (ACK murni + defconfig Mohithash) tetap jadi satu-satunya flavor.
 
 ## PENDING — Pelajari & Tiru `build-theettam.yml` (Mohithash) sebagai Acuan Alur Workflow
 **Sumber acuan (JANGAN dimodifikasi isinya, murni dipelajari polanya)**: https://github.com/Mohithash/kernel_xiaomi_sm8635/blob/theettam-2.8/.github/workflows/build-theettam.yml (ada juga di branch `17` & `master`; file pendukung: `scripts/ci/build-flavor.sh`, `scripts/ci/pins.env`, `scripts/ci/kmi-baseline/`)
@@ -181,7 +181,7 @@ Alur yang membuatnya "bekerja sangat baik" (hasil analisis 2026-09-08):
 8. **Release terpisah & eksplisit** — job `release` hanya jalan bila dispatch dengan `release=true`; hasil SELALU `prerelease: true` + `make_latest: false` dengan disclaimer "compile-verified ≠ boot-tested" di body.
 9. **Pins di `scripts/ci/pins.env`** — semua versi (toolchain, KSU, SUSFS) di satu file env, bukan tersebar di YAML.
 
-**Cara kita meniru (TANPA memodifikasi workflow Mohithash — hanya mengadopsi pola ke workflow kita, base tetap ACK murni & GuidixX, flavor Flavenz: `guidix-full`/`ack-full`)**:
+**Cara kita meniru (TANPA memodifikasi workflow Mohithash — hanya mengadopsi pola ke workflow kita, base ACK murni, flavor Flavenz: `ack-full`; `guidix-full` dihapus 2026-09-13)**:
 - [ ] Ekstrak logika build ke `scripts/ci/build-flavor.sh` (satu script per flavor, dipakai CI & lokal)
 - [ ] Pin + checksum Neutron clang & antman di env (tambah `NEUTRON_SHA256`, `ANTMAN_SHA256`)
 - [ ] Tambah job `plan` → matrix dinamis dari output (siapkan slot flavor baru tanpa edit YAML)
@@ -192,10 +192,10 @@ Alur yang membuatnya "bekerja sangat baik" (hasil analisis 2026-09-08):
 - [ ] Release: pertahankan job `release` milik kita (sudah jalan), tambahkan pola `prerelease` bila build belum boot-tested
 
 ## Next Decision Point
-Kedua opsi base sudah diimplementasikan sebagai matrix:
-- **guidix-full** = Opsi A (GuidixX 16.2 — ACK + CLO, proven boot)
-- **ack-full** = Opsi B (ACK murni + defconfig Mohithash)
-Tinggal diverifikasi dari hasil build: kalau salah satu flavor error/jelek, bisa di-drop dari matrix tanpa mengganggu yang lain (`fail-fast: false`).
+Matrix kini tinggal satu opsi (per 2026-09-13):
+- ~~**guidix-full** = Opsi A (GuidixX 16.2 — ACK + CLO, proven boot)~~ → **DIHAPUS: bootloop on-device** (logs/recovery_20260913.log) — "proven boot" GuidixX ternyata tidak berlaku untuk ROM NexiunOS V5 user
+- **ack-full** = Opsi B (ACK murni + defconfig Mohithash) — **boot-verified** di ROM user (release Flavenz-20260910)
+Kalau nanti mau coba base lain, tambahkan sebagai flavor matrix baru + verifikasi boot dulu sebelum dipublikasikan.
 
 ## Referensi Penting
 - Droidspaces config guide: `ravindu644/Droidspaces-OSS/blob/main/Documentation/Kernel-Configuration.md`
