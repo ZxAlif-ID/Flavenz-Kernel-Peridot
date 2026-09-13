@@ -1,0 +1,68 @@
+name: Boot-Test Image (fla-boot.img)
+
+# Tahap 1 roadmap boot-test (kernel-riset.md §2, commit f11f1a2):
+# repack Image (ack-full) -> fla-boot.img untuk uji `fastboot boot`
+# (boot dari RAM, NOL tulis partisi) SEBELUM asset dianggap teruji.
+# Logika repack di scripts/ci/build-boot-image.sh (pola Theettam:
+# 1 script build per tujuan, YAML cuma orkestrasi; CI & lokal identik).
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: "Run ID build ack-full sumber Image (kosong = run sukses terakhir build-droidspaces.yml di main)"
+        required: false
+        default: ""
+      bootimg_url:
+        description: "URL langsung boot.img stock backup peridot (aman publik). ATAU commit ke template/boot.img"
+        required: false
+        default: ""
+      selftest:
+        description: "Selftest pipeline: header boot.img SINTETIS (membuktikan CI, BUKAN header stock — hasil tidak untuk uji boot device)"
+        required: false
+        default: "false"
+
+permissions:
+  contents: read
+
+jobs:
+  boot-image:
+    name: Repack Image -> fla-boot.img
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      SOURCE_RUN_ID: ${{ github.event.inputs.source_run_id }}
+      BOOTIMG_URL: ${{ github.event.inputs.bootimg_url }}
+      # github.event.inputs.* bukan inputs.* — konteks inputs.* pernah gagal
+      # di workflow ini (error log: kasus inputs.flavor). Pola sama dipakai di sini.
+      SELFTEST: ${{ github.event.inputs.selftest }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup gh CLI auth
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh auth setup-git
+          gh auth status
+
+      - name: Build boot-test image
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          chmod +x scripts/ci/build-boot-image.sh
+          bash -n scripts/ci/build-boot-image.sh   # syntax gate keras
+          scripts/ci/build-boot-image.sh
+
+      - name: Upload fla-boot.img artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.BOOT_ARTIFACT_NAME || 'fla-boot-img' }}
+          path: |
+            dist/fla-boot-*.img
+            dist/fla-boot-info.txt
+          if-no-files-found: error
+          retention-days: 30
