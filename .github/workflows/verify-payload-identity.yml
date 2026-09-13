@@ -102,8 +102,8 @@ jobs:
           # Pilih magiskboot sesuai arsitektur runner (pola build-boot-image.sh):
           # x86_64 = scripts/ci/bin provenance Magisk v30.7; aarch64 = anykernel/tools.
           case "$(uname -m)" in
-            x86_64)          MB=scripts/ci/bin/magiskboot-x86_64 ;;
-            aarch64|arm64)   MB=anykernel/tools/magiskboot ;;
+            x86_64)          MB="$GITHUB_WORKSPACE/scripts/ci/bin/magiskboot-x86_64" ;;
+            aarch64|arm64)   MB="$GITHUB_WORKSPACE/anykernel/tools/magiskboot" ;;
             *) echo "::error::Arsitektur $(uname -m) tidak didukung"; exit 1 ;;
           esac
           chmod +x "${MB}"
@@ -113,12 +113,15 @@ jobs:
           # header selftest tercatat di run proven 34736539272) — yang dijalankan
           # ketat adalah KEBERADAAN payload hasil unpack.
           set +e
-          "${MB}" unpack work/unp/boot.img
+          # magiskboot menulis hasil unpack ke CWD (pola proven build-boot-image.sh
+          # yang selalu `cd $WORK` dulu sebelum invoke magiskboot)
+          cd work/unp
+          "${MB}" unpack boot.img
           rc=$?
           set -e
           echo "magiskboot unpack rc=${rc} (warning ASN.1 diterima, pola run proven)"
-          [ -f work/unp/kernel ] || { echo "::error::Payload kernel gagal diekstrak"; exit 1; }
-          "${MB}" verify work/unp/boot.img || true
+          [ -f kernel ] || { echo "::error::Payload kernel gagal diekstrak"; exit 1; }
+          "${MB}" verify boot.img || true
 
       - name: Compare sha256 Image vs kernel payload (GATE 100% identik)
         run: |
