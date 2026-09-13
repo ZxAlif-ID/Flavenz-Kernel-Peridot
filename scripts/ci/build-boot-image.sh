@@ -150,8 +150,11 @@ verify_image() {
   # Banner uname via tr (portable, tanpa binutils strings)
   VER=$(tr -c '[:print:]' '\n' < "$img" | grep -m1 '^Linux version' || true)
   [ -n "$VER" ] || fail "banner 'Linux version' tidak ditemukan di Image"
-  echo "$VER" | grep -q '6.1.138-android14-11-g0c3d559bcd85' \
-    || fail "uname Image tidak cocok base 6.1.138: '${VER}'"
+  echo "$VER" | grep -q '^Linux version 6\.1\.138-android14-11' \
+    || fail "uname Image bukan base GKI 6.1.138-android14-11: '${VER}'"
+  # Catatan: suffix commit (mis. ga3b9c44908dd-ab13320413+) boleh berbeda dari
+  # stock — ini banner Image PROVEN kita (boot-verified ROM user), bukan stock.
+  # Yang dipatok keras: sublevel 6.1.138 (keputusan matriks kernel-riset §7).
   log "Image OK (${size} byte): ${VER}"
 }
 
