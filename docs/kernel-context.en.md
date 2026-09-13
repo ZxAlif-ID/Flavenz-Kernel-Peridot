@@ -194,6 +194,30 @@ What makes it "work very well" (analysis of 2026-09-08):
 - [ ] Split artifacts into `zip-*` (error) + `build-*` (always, log + build artifacts)
 - [ ] Release: keep our existing `release` job (already working), add the `prerelease` pattern when a build is not yet boot-tested
 
+## PENDING — Additional Roadmap (2026-09-13, guidix emergency session)
+Agreed priority order (agent recommendation — work in sequence):
+1. **[ ] Boot-test image artifact (priority #1, cheapest & most protective)** — from the built
+   `Image`, the workflow repacks it into `boot-test-ack.img` (magiskboot: header from the user's
+   stock backup `/sdcard/Download/Nekogram/Kernel/Backup/boot.img`, kernel payload swapped for the
+   new `Image`) and uploads it as a second artifact. Goal: test the kernel WITHOUT writing any
+   partition — `fastboot boot boot-test-ack.img` (boots from RAM, reboot = back to normal).
+   Prevents a repeat of the Guidix bootloop + dead-touch case. If the Xiaomi bootloader blocks
+   `fastboot boot`: reversible fallback = flash to the inactive slot + `fastboot set_active`,
+   rollback = set_active back to the old slot.
+2. **[ ] PGO + BOLT + CLO to complete ack-full (priority #2, research)** — goal: approach the stock
+   toolchain (`AOSP clang + PGO + BOLT + LTO`, see Stock Kernel Info above):
+   - **PGO**: needs an instrumentation/training (profile-generation) step before the final build →
+     CI duration grows a lot. Plan: offline profiles from common gaming workloads, not per-build
+     instrumentation.
+   - **BOLT**: post-link optimizer, a separate step after `Image` exists. Research compatibility
+     with GKI 6.1 + the current ThinLTO first.
+   - **CLO**: identify which Qualcomm CLO parts are still missing from pure ACK. **REMEMBER the
+     Guidix case**: a CLO base + a different vendor (NexiunOS) = bootloop + total touch death. Any
+     CLO addition MUST pass the boot-test (item 1) before entering a release — and ideally must
+     not touch dtbo/vendor_boot at all.
+3. **[ ] (optional, housekeeping)** — regenerate the old releases' `SHA256SUMS.txt` without the
+   Guidix line.
+
 ## Next Decision Point
 The matrix is down to one option (as of 2026-09-13):
 - ~~**guidix-full** = Option A (GuidixX 16.2 — ACK + CLO, proven boot)~~ → **REMOVED: bootloop on-device** (logs/recovery_20260913.log) — GuidixX's "proven boot" does not hold on the user's NexiunOS V5 port

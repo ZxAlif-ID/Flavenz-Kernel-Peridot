@@ -191,6 +191,26 @@ Alur yang membuatnya "bekerja sangat baik" (hasil analisis 2026-09-08):
 - [ ] Pecah artifact jadi `zip-*` (error) + `build-*` (always, log + build artifacts)
 - [ ] Release: pertahankan job `release` milik kita (sudah jalan), tambahkan pola `prerelease` bila build belum boot-tested
 
+## PENDING — Roadmap Tambahan (2026-09-13, sesi darurat guidix)
+Urutan prioritas yang disepakati (rekomendasi agent — dikerjakan berurutan):
+1. **[ ] Boot-test image artifact (prioritas #1, paling murah & paling melindungi)** — dari `Image`
+   hasil build, workflow repack jadi `boot-test-ack.img` (magiskboot: header dari backup stock user
+   `/sdcard/Download/Nekogram/Kernel/Backup/boot.img`, payload kernel diganti `Image` baru) + upload
+   sebagai artifact kedua. Tujuan: uji kernel TANPA menulis partisi — `fastboot boot boot-test-ack.img`
+   (boot dari RAM, reboot = kembali normal). Mencegah kasus bootloop + touch-mati seperti Guidix
+   terulang. Jika bootloader Xiaomi memblokir `fastboot boot`: alternatif reversibel = flash ke slot
+   nonaktif + `fastboot set_active`, rollback = set_active slot lama.
+2. **[ ] PGO + BOLT + CLO untuk melengkapi ack-full (prioritas #2, riset)** — target mendekati
+   toolchain stock (`AOSP clang + PGO + BOLT + LTO`, lihat Stock Kernel Info di atas):
+   - **PGO**: butuh langkah instrumentasi/training (profile generation) sebelum build final → durasi
+     CI naik signifikan. Rencana: profile offline dari workload gaming umum, bukan instrument per-build.
+   - **BOLT**: post-link optimizer, langkah terpisah setelah `Image` jadi. Riset dulu kompatibilitas
+     dengan GKI 6.1 + ThinLTO yang sekarang.
+   - **CLO**: identifikasi bagian Qualcomm CLO yang belum ada di ACK murni. **INGAT kasus Guidix**:
+     base CLO + vendor beda (NexiunOS) = bootloop + touch mati total. Tambahan CLO apa pun WAJIB lolos
+     boot-test (poin 1) dulu sebelum masuk release — dan sebaiknya tidak menyentuh dtbo/vendor_boot.
+3. **[ ] (opsional, housekeeping)** — regenerate `SHA256SUMS.txt` release lama tanpa baris Guidix.
+
 ## Next Decision Point
 Matrix kini tinggal satu opsi (per 2026-09-13):
 - ~~**guidix-full** = Opsi A (GuidixX 16.2 — ACK + CLO, proven boot)~~ → **DIHAPUS: bootloop on-device** (logs/recovery_20260913.log) — "proven boot" GuidixX ternyata tidak berlaku untuk ROM NexiunOS V5 user
