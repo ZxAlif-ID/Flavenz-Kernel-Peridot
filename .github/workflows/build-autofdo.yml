@@ -425,5 +425,7 @@ jobs:
             --notes-file body.md \
             "${ZIP}" SHA256SUMS.txt
           echo "=== prerelease terbit ==="
-          gh release view "${TAG}" -R "${GITHUB_REPOSITORY}" --json name,tagName,isPrerelease,isLatest,assets \
-            --jq '"\(.name) [\(.tagName)] prerelease=\(.isPrerelease) latest=\(.isLatest) assets: " + ([.assets[].name] | join(", "))'
+          # isLatest TIDAK ada di field gh release view (run 34745536291 merah
+          # padahal release terbit) — cukup name/tag/prerelease/assets
+          gh release view "${TAG}" -R "${GITHUB_REPOSITORY}" --json name,tagName,isPrerelease,assets \
+            --jq '"\(.name) [\(.tagName)] prerelease=\(.isPrerelease) assets: " + ([.assets[].name] | join(", "))'
