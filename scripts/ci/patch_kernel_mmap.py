@@ -41,7 +41,11 @@ def build_event(text, klen):
     body += FN + b"\x00"
     total = (8 + len(body) + 7) // 8 * 8
     total += 32                                       # sample-id tail (zeros)
-    ev = struct.pack("<IHH", 10, 0, total) + body
+    # misc = PERF_RECORD_MISC_KERNEL (cpumode bit) — WAJIB: perf_parser.cc
+    # mendeteksi "first kernel mmap" via (misc & CPUMODE_MASK) == MISC_KERNEL;
+    # misc=0 = user-mode DSO -> nol sampel kernel ter-atribusi (run 34901326694:
+    # "Got an empty profile map", kernel.afdo 330 B).
+    ev = struct.pack("<IHH", 10, 0x1, total) + body
     ev += b"\x00" * (total - len(ev))
     assert len(ev) == total and total % 8 == 0
     assert ev[72:72 + len(FN)] == FN                  # nama persis di offset kernel
