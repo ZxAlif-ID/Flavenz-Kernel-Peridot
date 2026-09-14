@@ -1,16 +1,25 @@
 #!/usr/bin/env python3
-"""Insert synthetic [kernel.kallsyms] MMAP event into a perf.data (PERFILE2, perf 5.15).
+"""Insert synthetic [kernel.kallsyms] MMAP2 event into a perf.data (PERFILE2).
 
 Device recorded with kptr_restrict=2 -> perf.data has ZERO kernel MMAP events,
 so create_llvm_prof (quipper) cannot attribute kernel samples to the kernel DSO.
-This patcher inserts one MMAP event (start=_text, size=_end-_text, pgoff=0) at
-the head of the data section. Sample IPs minus _text are KASLR-slide-invariant.
+This patcher inserts one MMAP2 event (start=_text, size=_end-_text) at the head
+of the data section. Sample IPs minus _text are KASLR-slide-invariant.
 
-QUIRK (proven CI run 34893746931): quipper reads events by header data_size,
-so growing data_size without moving the trailing feature-section descriptor
-table makes it parse table bytes as events -> "Event size 0 ... UNKNOWN_EVENT_0 /
-Error reading build ID header". Fix: shift the whole tail (descriptor table +
-feature data) +64 and increment every descriptor's absolute offset by +64.
+Design notes (all proven against quipper source + CI runs 34889560179/34893746931/
+34897353379):
+- MMAP2 (not MMAP): mirrors the events perf 5.15 actually writes in our files
+  (kernel text mapped as exec, attr sample_id_all), so quipper's fixed/variable
+  payload math holds by construction.
+- Layout: pid,tid,start,len,pgoff (24) + maj,min,ino,ino_gen,prot,flags (32)
+  + reserved (8) + filename NUL-padded to 8 (quipper: GetUint64AlignedStringLength)
+  + 32 B zero sample-id tail. header.size MUST equal the real byte span
+  (perf events are 8-aligned; header size == disk span).
+- quipper enforces header.size > fixed_payload + aligned_filename (perf_serializer
+  GetSampleInfoReaderForEvent) - the zero tail satisfies that for MMAP2.
+- quipper reads events by header data_size: growing data_size requires shifting
+  the trailing feature-section descriptor table and bumping its absolute offsets
+  (perf tools read by count and never notice; quipper does).
 
 Usage: patch_kernel_mmap.py <in.data> <out.data> <text_addr> <kernel_len>
 """
@@ -18,21 +27,32 @@ import struct
 import sys
 
 PERFILE2 = 0x32454c4946524550
+FN = b"[kernel.kallsyms]"
+
+
+def build_event(text, klen):
+    # Layout terukur dari MMAP2 asli di segmen rekaman (kernel 5.15):
+    # hdr8 + pid4 tid4 start8 len8 pgoff8 (=40) + maj4 min4 ino8 ino_gen8 (=64)
+    # + prot4 flags4 (=72) -> filename @72. TANPA reserved tambahan.
+    body = struct.pack("<IIQQQ", 0xFFFFFFFF, 0xFFFFFFFF, text, klen, 0)
+    body += struct.pack("<IIQQ", 0, 0, 0, 0)          # maj,min,ino,ino_gen
+    body += struct.pack("<II", 5, 0)                  # prot (r-x), flags
+    assert len(body) == 64
+    body += FN + b"\x00"
+    total = (8 + len(body) + 7) // 8 * 8
+    total += 32                                       # sample-id tail (zeros)
+    ev = struct.pack("<IHH", 10, 0, total) + body
+    ev += b"\x00" * (total - len(ev))
+    assert len(ev) == total and total % 8 == 0
+    assert ev[72:72 + len(FN)] == FN                  # nama persis di offset kernel
+    return ev
 
 
 def main():
     inp, outp, text_s, len_s = sys.argv[1:5]
     text = int(text_s, 0)
     klen = int(len_s, 0)
-
-    fn = b"[kernel.kallsyms]"
-    # PERF WAJIB: event size harus kelipatan 8 (header = span aktual di disk).
-    body = struct.pack("<IIQQQ", 0xFFFFFFFF, 0xFFFFFFFF, text, klen, 0) + fn + b"\x00"
-    total = 8 + len(body)
-    total = (total + 7) // 8 * 8
-    ev = struct.pack("<IHH", 1, 0, total) + body
-    ev += b"\x00" * (total - len(ev))
-    assert len(ev) == total and total % 8 == 0
+    ev = build_event(text, klen)
 
     with open(inp, "rb") as f:
         head = f.read(96)
@@ -42,25 +62,20 @@ def main():
     data_off, data_size = h[4], h[5]
     data_end = data_off + data_size
 
-    # guard idempotensi
     with open(inp, "rb") as f:
         f.seek(data_off)
-        if fn in f.read(4096):
-            print(f"SKIP {inp}: [kernel.kallsyms] sudah ada di data section")
+        if FN in f.read(4096):
+            print(f"SKIP {inp}: {FN.decode()} sudah ada di data section")
             return
 
     with open(inp, "rb") as f:
         f.seek(data_end)
         desc0 = f.read(16)
+    table_len = 0
     if len(desc0) == 16:
-        d0_off, d0_size = struct.unpack("<QQ", desc0)
-        # tabel deskriptor menutup [data_end, desc0.off); butuh sanity
+        d0_off, _ = struct.unpack("<QQ", desc0)
         if data_end < d0_off <= data_end + 65536:
             table_len = d0_off - data_end
-        else:
-            table_len = 0
-    else:
-        table_len = 0
 
     with open(inp, "rb") as f:
         f.seek(0)
@@ -68,7 +83,7 @@ def main():
         f.seek(data_off)
         data = f.read(data_size)
         f.seek(data_end)
-        tail = f.read()  # tabel + feature data (akan geser +len(ev))
+        tail = f.read()
 
     struct.pack_into("<QQ", header, 8 + 8 * 4, data_off, data_size + len(ev))
 
@@ -76,7 +91,7 @@ def main():
         tbl = bytearray(tail[:table_len])
         for k in range(0, table_len, 16):
             off, size = struct.unpack_from("<QQ", tbl, k)
-            if off:  # slot kosong = {0,0} dibiarkan
+            if off:
                 struct.pack_into("<Q", tbl, k, off + len(ev))
         tail = bytes(tbl) + tail[table_len:]
         note = f"tail shifted +{len(ev)} (table {table_len} B, offsets bumped)"
@@ -88,7 +103,8 @@ def main():
         o.write(ev)
         o.write(data)
         o.write(tail)
-    print(f"patched {outp}: MMAP start={text:#x} len={klen:#x} (+{len(ev)} B; {note})")
+    print(f"patched {outp}: MMAP2 start={text:#x} len={klen:#x} "
+          f"(+{len(ev)} B; {note})")
 
 
 if __name__ == "__main__":

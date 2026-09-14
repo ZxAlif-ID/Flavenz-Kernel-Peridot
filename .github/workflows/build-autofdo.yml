@@ -500,7 +500,7 @@ jobs:
           [ -n "${VMLINUX}" ] || { echo "::error::vmlinux tidak ada di artifact autofdo-debug"; exit 1; }
           ls -lh "${VMLINUX}"
           # geometri anchor dari input-1 (MMAP event pertama)
-          GEO=$(python3 -c "import struct; b=open('prof/in1.data','rb').read(2048); h=struct.unpack_from('<Q9Q',b,8); d=h[4]; t,m,s=struct.unpack_from('<IHH',b,d); assert t==1, 'input-1 bukan anchor MMAP t=%d'%t; a,l,p=struct.unpack_from('<QQQ',b,d+16); print(hex(a),hex(l))")
+          GEO=$(python3 -c "import struct; b=open('prof/in1.data','rb').read(2048); h=struct.unpack_from('<Q9Q',b,8); d=h[4]; t,m,s=struct.unpack_from('<IHH',b,d); assert t in (1,10), 'input-1 bukan anchor MMAP/MMAP2 t=%d'%t; a,l,p=struct.unpack_from('<QQQ',b,d+16); print(hex(a),hex(l))")
           read TEXT KLEN <<< "${GEO}"
           echo "anchor geometry: _text=${TEXT} len=${KLEN}"
           # patch MMAP sintetis ke tiap segmen (input-1 = anchor, tak perlu patch)
