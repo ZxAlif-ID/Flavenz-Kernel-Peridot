@@ -478,7 +478,9 @@ jobs:
           done
           ls -lh prof/
           # merge semua segmen via ';'-multi-input (resmi create_llvm_prof.cc:154)
-          CLP_PROF=$(printf 'prof/in%d.data' $(seq 1 $i) | tr ' ' ';')
+          # PENTING: printf mengulang format per argumen TANPA separator —
+          # sertakan ';' di format lalu trim trailing (bug proven run 34886288007)
+          CLP_PROF=$(printf 'prof/in%d.data;' $(seq 1 $i) | sed 's/;$//')
           echo "CLP_PROF=${CLP_PROF}" >> "$GITHUB_ENV"
 
       - name: Download vmlinux (dari build job run ini)
