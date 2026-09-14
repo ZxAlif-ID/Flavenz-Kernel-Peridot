@@ -441,18 +441,20 @@ jobs:
     # Konversi profil device -> kernel.afdo (riset § 9.4-3, gap § 9.5-2).
     # Input perfdata_urls = URL raw perf.data TERGABUNG ";": <anchor>;<seg1>;<seg2>;...
     # (profile_url TETAP khusus kernel.afdo utk build final — jangan dicampur.)
-    # create_llvm_prof v0.30.1 resmi menerima multi-file ';'-concat (create_llvm_prof.cc:154).
-    # Anchor [kernel.kallsyms] = mini perf.data dengan 1 event MMAP sintetis
-    # (start=_text, len=_end-_text) — device kptr=2 tidak menulis MMAP kernel
-    # ke perf.data (riset § 9.3-3), jadi anchor dibuat dari snapshot kallsyms.
-    # prof_sym_list=false WAJIB (GKI README: fungsi tak-terprofil dinyatakan dingin
-    # -> deoptimize -> section mismatch).
+    # Input-1 WAJIB anchor (mini perf.data dgn 1 MMAP [kernel.kallsyms]; _text &
+    # len diekstrak darinya). PROVEN run 34889560179: ';' multi-profile di
+    # create_llvm_prof v0.30.1 HANYA untuk --format=propeller (create_llvm_prof.cc:247)
+    # -> jalur benar: patch MMAP sintetis ke TIAP segmen (device kptr=2 = nol MMAP
+    # kernel, riset § 9.3-3), konversi per-file, merge via llvm-profdata.
     name: Convert device profile to kernel.afdo
     needs: [build]
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 30
     if: ${{ github.event.inputs.perfdata_urls != '' }}
     steps:
+      - name: Checkout (patcher script)
+        uses: actions/checkout@v4
+
       - name: Download create_llvm_prof (x86_64, v0.30.1)
         run: |
           set -euo pipefail
@@ -462,13 +464,20 @@ jobs:
           CLP=$(find bin -type f -name 'create_llvm_prof*' | head -n1)
           echo "CLP=${CLP}" >> "$GITHUB_ENV"
 
+      - name: Install llvm-profdata (merge afdo)
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq llvm
+          llvm-profdata --version | head -1 || true
+
       - name: Download profile inputs
         env:
           PERFDATA_URLS: ${{ github.event.inputs.perfdata_urls }}
         run: |
           set -euo pipefail
           [ -n "${PERFDATA_URLS}" ] || { echo "::error::perfdata_urls kosong"; exit 1; }
-          mkdir prof
+          mkdir -p prof patched
           i=0
           IFS=';' read -ra URLS <<< "${PERFDATA_URLS}"
           for u in "${URLS[@]}"; do
@@ -477,11 +486,6 @@ jobs:
             curl -fsSL -o "prof/in$i.data" "$u"
           done
           ls -lh prof/
-          # merge semua segmen via ';'-multi-input (resmi create_llvm_prof.cc:154)
-          # PENTING: printf mengulang format per argumen TANPA separator —
-          # sertakan ';' di format lalu trim trailing (bug proven run 34886288007)
-          CLP_PROF=$(printf 'prof/in%d.data;' $(seq 1 $i) | sed 's/;$//')
-          echo "CLP_PROF=${CLP_PROF}" >> "$GITHUB_ENV"
 
       - name: Download vmlinux (dari build job run ini)
         uses: actions/download-artifact@v4
@@ -489,20 +493,37 @@ jobs:
           name: autofdo-debug-${{ github.run_id }}
           path: vmlinux-dir
 
-      - name: Convert to kernel.afdo
+      - name: Patch anchor + convert per-file + merge
         run: |
           set -euo pipefail
           VMLINUX=$(find vmlinux-dir -name vmlinux -type f | head -n1)
           [ -n "${VMLINUX}" ] || { echo "::error::vmlinux tidak ada di artifact autofdo-debug"; exit 1; }
           ls -lh "${VMLINUX}"
-          "${CLP}" \
-            --profiler=perf \
-            --binary="${VMLINUX}" \
-            --profile="${CLP_PROF}" \
-            --format=extbinary \
-            --use_fs_discriminator \
-            --out=kernel.afdo \
-            --prof_sym_list=false
+          # geometri anchor dari input-1 (MMAP event pertama)
+          GEO=$(python3 -c "import struct; b=open('prof/in1.data','rb').read(2048); h=struct.unpack_from('<Q9Q',b,8); d=h[4]; t,m,s=struct.unpack_from('<IHH',b,d); assert t==1, 'input-1 bukan anchor MMAP t=%d'%t; a,l,p=struct.unpack_from('<QQQ',b,d+16); print(hex(a),hex(l))")
+          read TEXT KLEN <<< "${GEO}"
+          echo "anchor geometry: _text=${TEXT} len=${KLEN}"
+          # patch MMAP sintetis ke tiap segmen (input-1 = anchor, tak perlu patch)
+          n=$(ls prof/in*.data | wc -l)
+          for j in $(seq 2 "${n}"); do
+            python3 scripts/ci/patch_kernel_mmap.py "prof/in$j.data" "patched/in$j.data" "$TEXT" "$KLEN"
+          done
+          # konversi per file ter-patch (extbinary = satu file per invokasi)
+          for j in $(seq 2 "${n}"); do
+            echo "=== convert seg $j ==="
+            "${CLP}" \
+              --profiler=perf \
+              --binary="${VMLINUX}" \
+              --profile="patched/in$j.data" \
+              --format=extbinary \
+              --use_fs_discriminator \
+              --out="patched/out$j.afdo" \
+              --prof_sym_list=false
+            ls -lh "patched/out$j.afdo"
+            [ -s "patched/out$j.afdo" ] || { echo "::error::out$j.afdo kosong"; exit 1; }
+          done
+          # merge semua profil sample extbinary -> kernel.afdo
+          llvm-profdata merge --sample --extbinary --output=kernel.afdo patched/out*.afdo
           ls -lh kernel.afdo
           [ -s kernel.afdo ] || { echo "::error::kernel.afdo kosong"; exit 1; }
 
