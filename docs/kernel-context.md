@@ -87,7 +87,7 @@ CONFIG_KALLSYMS=y / CONFIG_KALLSYMS_ALL=y
 - **Matrix 1 job** (`fail-fast: false`) — sejak 2026-09-13:
   1. **ack-full** — clone ACK `kernel/common` @ `0c3d559bcd85` + defconfig dari `Mohithash/kernel_xiaomi_sm8635` (dynamic branch fallback: `17` → `main` → `theettam-2.8` → `theettam-2.7`)
   - ~~**guidix-full** — clone `GuidixX/kernel_xiaomi_sm8635` branch `16.2`~~ → **DIHAPUS 2026-09-13**: bootloop on-device setelah flash zip Guidix (recovery restore boot/dtbo/init_boot/vendor_boot dari backup, ROM NexiunOS masuk lagi — device selamat). Zip Guidix dihapus dari semua Release.
-- Step umum: free disk space → install deps (bc, bison, flex, libssl, cpio, pahole, lz4, zstd, gcc-aarch64-linux-gnu, dll) → setup Neutron Clang 30062026 + antman glibc patch → apply Droidspaces & container configs → apply kABI SYSVIPC patch → setup KernelSU Next v3.3.0 (pershoot/dev-susfs) → setup SUSFS v2.1.0 → build (`gki_defconfig` [+ `vendor/peridot_GKI.config`], `Image Image.gz dtbs`) → **Package AnyKernel3** → upload artifact
+- Step umum: free disk space → install deps (bc, bison, flex, libssl, cpio, pahole, lz4, zstd, gcc-aarch64-linux-gnu, dll) → setup Neutron Clang 30062026 + antman glibc patch → apply Droidspaces & container configs → apply kABI SYSVIPC patch → setup KernelSU Next 5dfc3359 (pershoot dev-susfs pinned commit) → setup SUSFS v2.3.0 (patches/susfs vendored, fail-hard) → build (`gki_defconfig` [+ `vendor/peridot_GKI.config`], `Image Image.gz dtbs`) → **Package AnyKernel3** → upload artifact
 - Output: artifact per run + **job `release` otomatis** — setelah job matrix sukses, zip flashable mentah + `SHA256SUMS.txt` diterbitkan sebagai aset **GitHub Releases** (tag `Flavenz-YYYYMMDD`) lengkap dengan deskripsi; tanpa zip dalam zip (aset release tidak dibungkus zip, berbeda dari artifact Actions)
 - Deterministic build: `KBUILD_BUILD_USER/HOST` di-pin; `KBUILD_BUILD_TIMESTAMP` **dinamis** dari input `rom_build_date` (sinkron `ro.build.date` ROM — fix Duck Detector build-time drift, lihat tabel error)
 
@@ -100,7 +100,7 @@ CONFIG_KALLSYMS=y / CONFIG_KALLSYMS_ALL=y
 
 ## Output ZIP (artifact per flavor)
 ```
-Peridot-Kernel-ACK-KSUNext-v3.3.0-SUSFS-v2.1.0-droidspaces-YYYYMMDD.zip       (ack-full; guidix-full DIHAPUS 2026-09-13)
+Peridot-Kernel-ACK-KSUNext-5dfc3359-SUSFS-v2.3.0-droidspaces-YYYYMMDD.zip       (ack-full; guidix-full DIHAPUS 2026-09-13)
 ```
 
 ## Toolchain
@@ -219,7 +219,7 @@ Kalau nanti mau coba base lain, tambahkan sebagai flavor matrix baru + verifikas
 
 ## Referensi Penting
 - Droidspaces config guide: `ravindu644/Droidspaces-OSS/blob/main/Documentation/Kernel-Configuration.md`
-- KernelSU Next setup: `curl -LSs "https://raw.githubusercontent.com/pershoot/KernelSU-Next/dev-susfs/kernel/setup.sh" | bash -s v3.3.0` (pershoot/dev-susfs — SUSFS hooks built-in, proven via WildKernels r7-r12)
+- KernelSU Next setup: `curl -LSs "https://raw.githubusercontent.com/pershoot/KernelSU-Next/${KERNELSU_COMMIT}/kernel/setup.sh" | bash -s $KERNELSU_COMMIT` (pin `5dfc3359e1cf2f4d953c74205c8d06e6eaadbec0` — SUSFS hooks built-in); SUSFS: `patches/susfs/` vendored (susfs4ksu `05f2019`, v2.3.0 + `50_add` rebased vs ACK `0c3d559`, `git apply --check` lalu apply, fail-hard)
 - SUSFS branch untuk kernel 6.1: `gki-android14-6.1` di `gitlab.com/simonpunk/susfs4ksu`
 - Antman (Neutron glibc patcher): `github.com/Neutron-Toolchains/antman`
 - MiCode peridot source: `github.com/MiCode/Xiaomi_Kernel_OpenSource` branch `peridot-u-oss`
