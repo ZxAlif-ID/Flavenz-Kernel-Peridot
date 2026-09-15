@@ -411,7 +411,7 @@ jobs:
             echo ""
             echo "Mode build: ${MODE}"
             echo ""
-            echo "- Base: ACK android14-6.1 @ \`0c3d559bcd85\` + defconfig Mohithash + KSU Next v3.3.0 + SUSFS v2.1.0 + Droidspaces"
+            echo "- Base: ACK android14-6.1 @ \`0c3d559bcd85\` + defconfig Mohithash + KSU Next \`${KERNELSU_VERSION}\` + SUSFS \`${SUSFS_VERSION}\` + Droidspaces"
             echo "- AutoFDO: backport upstream \`315ad8780a\` (P1 plumbing)"
             echo "- Banner uname tetap pola proven \`6.1.138-android14-11\` (anti-deteksi utuh)"
             echo ""

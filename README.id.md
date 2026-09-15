@@ -5,8 +5,8 @@
 [![Kernel Version](https://img.shields.io/badge/Kernel-6.1.138-blue.svg)](https://kernel.org)
 [![Android](https://img.shields.io/badge/Android-14%2F15%2F16-green.svg)](https://android.com)
 [![Device](https://img.shields.io/badge/Device-Xiaomi%20POCO%20F6%20%2F%20Redmi%20Turbo%203-orange.svg)](https://www.gsmarena.com/xiaomi_poco_f6-12940.php)
-[![KSUNext](https://img.shields.io/badge/KSUNext-v3.3.0-purple.svg)](https://github.com/KernelSU/KernelSU)
-[![SUSFS](https://img.shields.io/badge/SUSFS-v2.1.0-red.svg)](https://github.com/simonpunk/susfs4ksu)
+[![KSUNext](https://img.shields.io/badge/KSUNext-5dfc3359-purple.svg)](https://github.com/KernelSU/KernelSU)
+[![SUSFS](https://img.shields.io/badge/SUSFS-v2.3.0-red.svg)](https://github.com/simonpunk/susfs4ksu)
 [![License](https://img.shields.io/badge/License-GPLv2-yellow.svg)](LICENSE)
 [![Release](https://img.shields.io/github/v/release/ZxAlif-ID/Flavenz-Kernel-Peridot?include_prereleases&logo=github)](https://github.com/ZxAlif-ID/Flavenz-Kernel-Peridot/releases/latest)
 
@@ -38,8 +38,8 @@ Berbeda dengan kernel yang diberi patch eksperimental (BORE, ADIOS, scheduler ta
 ## 🔥 Fitur Utama
 
 - **Base GKI 6.1**: `6.1.138-android14-11` — kompatibel stock, GKI murni.
-- **KernelSU Next (v3.3.0)**: solusi root terintegrasi (branch `pershoot/dev-susfs` — hook SUSFS built-in) via init_boot (mode GKI).
-- **SUSFS (v2.1.0)**: penyembunyian root & mount point lanjutan — kompatibel aplikasi banking dan integrity check.
+- **KernelSU Next (5dfc3359)**: solusi root terintegrasi (branch `pershoot/dev-susfs` — hook SUSFS built-in) via init_boot (mode GKI).
+- **SUSFS (v2.3.0)**: penyembunyian root & mount point lanjutan — kompatibel aplikasi banking dan integrity check.
 - **Dukungan Droidspaces native**: containerization penuh (`CONFIG_PID_NS`, `CONFIG_IPC_NS`, `CONFIG_SYSVIPC` + patch relokasi kABI untuk GKI 6.1) untuk environment gaming terisolasi.
 - **Zero Bloat**: tanpa scheduler pihak ketiga / patch tak stabil yang memicu reboot acak atau thermal throttling.
 - **ThinLTO + KALLSYMS**: kompilasi Clang teroptimasi untuk performa sustain.
@@ -108,7 +108,7 @@ Zip juga di-upload sebagai artifact run (**Actions** → run hijau terbaru → A
 
 ### Penamaan Zip
 
-- `Peridot-Kernel-ACK-KSUNext-v3.3.0-SUSFS-v2.1.0-droidspaces-YYYYMMDD.zip`
+- `Peridot-Kernel-ACK-KSUNext-5dfc3359-SUSFS-v2.3.0-droidspaces-YYYYMMDD.zip`
 
 ---
 
@@ -131,7 +131,7 @@ Workflow GitHub Actions otomatis penuh (`.github/workflows/build-droidspaces.yml
 
 - Trigger manual via **workflow_dispatch** (Actions → Run workflow).
 - Matrix **1 job**: `ack-full` (flavor lama `guidix-full` dihapus 2026-09-13 — bootloop on-device).
-- Langkah: free disk space → install dependencies → setup Neutron Clang (+ antman patch glibc) → clone source kernel per flavor → apply config Droidspaces + ThinLTO → apply patch kABI SYSVIPC → setup KernelSU Next v3.3.0 → setup SUSFS v2.1.0 → build (`Image`, `Image.gz`, `dtbs`) dengan **timestamp build sinkron ROM** (input `rom_build_date` — menjaga `uname -a` selaras tanggal build ROM agar integrity checker seperti Duck Detector tidak menandai drift) → package zip AnyKernel3 (folder `anykernel/` vendor + `anykernel.sh` generate) → upload artifact.
+- Langkah: free disk space → install dependencies → setup Neutron Clang (+ antman patch glibc) → clone source kernel per flavor → apply config Droidspaces + ThinLTO → apply patch kABI SYSVIPC → setup KernelSU Next 5dfc3359 (pershoot dev-susfs, pinned commit) → setup SUSFS v2.3.0 (vendored patch, fail-hard) → build (`Image`, `Image.gz`, `dtbs`) dengan **timestamp build sinkron ROM** (input `rom_build_date` — menjaga `uname -a` selaras tanggal build ROM agar integrity checker seperti Duck Detector tidak menandai drift) → package zip AnyKernel3 (folder `anykernel/` vendor + `anykernel.sh` generate) → upload artifact.
 - **Job release**: setelah job matrix sukses, job `release` menerbitkan zip flashable mentah + `SHA256SUMS.txt` ke GitHub Releases (tag `Flavenz-YYYYMMDD`) lengkap dengan catatan rilis — tanpa zip-dalam-zip.
 
 Lihat `docs/kernel-context.md` (atau [terjemahan Inggris](docs/kernel-context.en.md)) untuk rincian teknis penuh dan log error-fix.

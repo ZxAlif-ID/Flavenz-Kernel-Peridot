@@ -20,7 +20,7 @@
 ## Tujuan Build
 - Kernel mendekati stock + Droidspaces untuk gaming
 - **Tidak pakai** Theettam kernel (BORE, ADIOS, BBRv3 dll = tweak performa yang tidak diinginkan)
-- Root: KernelSU Next v3.3.0
+- Root: KernelSU Next 5dfc3359 (pershoot dev-susfs pin)
 - Prioritas: gaming performance + Droidspaces container
 
 ## Riset Kernel Base

@@ -4,6 +4,28 @@ All notable changes to this repository. Build releases are tagged
 `Flavenz-YYYYMMDD` — see [Releases](https://github.com/ZxAlif-ID/Flavenz-Kernel-Peridot/releases).
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2026-09-15] — SUSFS actually enabled for the first time
+### Fixed
+- **SUSFS core was never compiled into any build**: the upstream
+  `50_add_susfs_in_gki-android14-6.1.patch` did not apply against ACK
+  `0c3d559bcd85` (include-context mismatch in `fs/exec.c`/`fs/proc/base.c`)
+  and the workflow swallowed the failure (`|| echo`). `susfs` strings: 0 in
+  every shipped Image; the `SUSFS v2.1.0` zip label was a pure mislabel
+  (branch HEAD was already v2.3.0 since 2026-08-30).
+- KernelSU Next tag `v3.3.0` lacks the SUSFS-integration symbols the patch
+  expects (v3.x hook-manager refactor) → the correct pairing is pershoot
+  `dev-susfs` HEAD `5dfc3359` (selinux glue pre-integrated).
+### Changed
+- `patches/susfs/` vendored + pinned: `susfs.c`/`susfs.h`/`susfs_def.h`
+  (susfs4ksu `05f2019`, v2.3.0) + the 50_add patch rebased to ACK
+  `0c3d559bcd85` (applies clean, verified via `git apply --check`).
+- `build-droidspaces.yml` + `build-autofdo.yml`: KernelSU setup pinned to
+  commit `5dfc3359`, SUSFS setup vendored + fail-hard (`git apply --check`,
+  apply, `fs/Makefile` guard) — no more swallowed patch failures; labels
+  truthful (`SUSFS-v2.3.0`, `KSUNext-5dfc3359`).
+- First SUSFS-enabled build: prerelease `Flavenz-20260915-afdo`
+  (run `34919940613`). Boot-test via `fla-boot.img` required before stable.
+
 ## [2026-09-13] — guidix-full flavor removed
 ### Removed
 - **The `guidix-full` flavor (GuidixX 16.2 base) is gone**: the Guidix zip

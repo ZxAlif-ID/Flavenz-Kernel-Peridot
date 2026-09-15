@@ -5,8 +5,8 @@
 [![Kernel Version](https://img.shields.io/badge/Kernel-6.1.138-blue.svg)](https://kernel.org)
 [![Android](https://img.shields.io/badge/Android-14%2F15%2F16-green.svg)](https://android.com)
 [![Device](https://img.shields.io/badge/Device-Xiaomi%20POCO%20F6%20%2F%20Redmi%20Turbo%203-orange.svg)](https://www.gsmarena.com/xiaomi_poco_f6-12940.php)
-[![KSUNext](https://img.shields.io/badge/KSUNext-v3.3.0-purple.svg)](https://github.com/KernelSU/KernelSU)
-[![SUSFS](https://img.shields.io/badge/SUSFS-v2.1.0-red.svg)](https://github.com/simonpunk/susfs4ksu)
+[![KSUNext](https://img.shields.io/badge/KSUNext-5dfc3359-purple.svg)](https://github.com/KernelSU/KernelSU)
+[![SUSFS](https://img.shields.io/badge/SUSFS-v2.3.0-red.svg)](https://github.com/simonpunk/susfs4ksu)
 [![License](https://img.shields.io/badge/License-GPLv2-yellow.svg)](LICENSE)
 [![Release](https://img.shields.io/github/v/release/ZxAlif-ID/Flavenz-Kernel-Peridot?include_prereleases&logo=github)](https://github.com/ZxAlif-ID/Flavenz-Kernel-Peridot/releases/latest)
 
@@ -39,8 +39,8 @@ Unlike kernels bloated with experimental, unstable patches (BORE, ADIOS, or unne
 ## 🔥 Key Features
 
 - **GKI 6.1 Base**: `6.1.138-android14-11` — stock-compatible, pure GKI.
-- **KernelSU Next (v3.3.0)**: Integrated root solution (pershoot `dev-susfs` branch — SUSFS hooks built-in) via init_boot (GKI mode).
-- **SUSFS (v2.1.0)**: Advanced root hiding and mount point concealment, ensuring seamless banking and integrity app compatibility.
+- **KernelSU Next (5dfc3359)**: Integrated root solution (pershoot `dev-susfs` branch — SUSFS hooks built-in) via init_boot (GKI mode).
+- **SUSFS (v2.3.0)**: Advanced root hiding and mount point concealment, ensuring seamless banking and integrity app compatibility.
 - **Native Droidspaces Support**: Full containerization enablement (`CONFIG_PID_NS`, `CONFIG_IPC_NS`, `CONFIG_SYSVIPC` with kABI relocation patch for GKI 6.1) for running isolated gaming environments.
 - **Zero Bloat Policy**: Free from unnecessary third-party schedulers or unstable patches that cause random reboots or thermal throttling.
 - **ThinLTO + KALLSYMS**: Optimized compilation with Clang for sustained performance.
@@ -111,7 +111,7 @@ Zips are also uploaded as run artifacts (**Actions** → latest green run → Ar
 
 ### Zip Naming
 
-- `Peridot-Kernel-ACK-KSUNext-v3.3.0-SUSFS-v2.1.0-droidspaces-YYYYMMDD.zip`
+- `Peridot-Kernel-ACK-KSUNext-5dfc3359-SUSFS-v2.3.0-droidspaces-YYYYMMDD.zip`
 
 ---
 
@@ -132,7 +132,7 @@ This repository includes a fully automated GitHub Actions workflow (`.github/wor
 
 - Triggered manually via **workflow_dispatch** (Actions → Run workflow).
 - Matrix of **1 job**: `ack-full` (the former `guidix-full` flavor was removed on 2026-09-13 — bootloop on-device).
-- Steps: free disk space → install dependencies → setup Neutron Clang (with antman glibc patch) → clone kernel source per flavor → apply Droidspaces + ThinLTO configs → apply SYSVIPC kABI patch → setup KernelSU Next v3.3.0 → setup SUSFS v2.1.0 → build (`Image`, `Image.gz`, `dtbs`) with a **ROM-synced build timestamp** (`rom_build_date` input — keeps `uname -a` aligned with the ROM's build date so integrity checkers like Duck Detector report no drift) → package AnyKernel3 ZIP (vendored `anykernel/` tree + generated `anykernel.sh`) → upload artifact.
+- Steps: free disk space → install dependencies → setup Neutron Clang (with antman glibc patch) → clone kernel source per flavor → apply Droidspaces + ThinLTO configs → apply SYSVIPC kABI patch → setup KernelSU Next 5dfc3359 (pershoot dev-susfs, pinned commit) → setup SUSFS v2.3.0 (vendored patch, fail-hard) → build (`Image`, `Image.gz`, `dtbs`) with a **ROM-synced build timestamp** (`rom_build_date` input — keeps `uname -a` aligned with the ROM's build date so integrity checkers like Duck Detector report no drift) → package AnyKernel3 ZIP (vendored `anykernel/` tree + generated `anykernel.sh`) → upload artifact.
 - **Release job**: after the matrix job succeeds, a `release` job publishes the raw flashable zip + `SHA256SUMS.txt` to GitHub Releases (tag `Flavenz-YYYYMMDD`) with full release notes — no zip-in-zip.
 
 See `docs/kernel-context.md` (or its [English translation](docs/kernel-context.en.md)) for the full technical breakdown and the error-fix log.
