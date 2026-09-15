@@ -30,8 +30,14 @@ jobs:
     env:
       ARCH: arm64
       KERNEL_COMMIT: 0c3d559bcd85
-      KERNELSU_VERSION: v3.3.0
-      SUSFS_VERSION: v2.1.0
+      # KSU dev-susfs pin (HEAD 2026-09-15): punya ksu_handle_post_execveat_sucompat
+      # + ksu_install_su_fd yang dibutuhkan patch SUSFS ter-rebase. Tag v3.3.0 TIDAK
+      # punya simbol itu (refactor hook manager) -> SUSFS dulu tak pernah bisa jalan.
+      KERNELSU_VERSION: 5dfc3359
+      KERNELSU_COMMIT: 5dfc3359e1cf2f4d953c74205c8d06e6eaadbec0
+      # Label = versi nyata di pin susfs4ksu 05f2019 (v2.3.0 sejak 2026-08-30;
+      # label lama v2.1.0 = mislabel murni, susfs core tak pernah ter-compile).
+      SUSFS_VERSION: v2.3.0
       FLAVOR: ${{ matrix.flavor }}
       # Duck Detector Build Time Drift & Mismatch Fix
       # KBUILD_BUILD_TIMESTAMP TIDAK di-pin hardcode lagi — dihitung dinamis di
@@ -239,22 +245,26 @@ jobs:
           [ -s kernel.afdo ] || { echo "::error::profil AutoFDO kosong"; exit 1; }
           ls -lh kernel.afdo
 
-      - name: Setup KernelSU Next (pershoot/dev-susfs)
+      - name: Setup KernelSU Next (pershoot/dev-susfs, pin commit)
         run: |
           cd kernel
-          curl -LSs "https://raw.githubusercontent.com/pershoot/KernelSU-Next/dev-susfs/kernel/setup.sh" \
-            | bash -s $KERNELSU_VERSION
+          curl -LSs "https://raw.githubusercontent.com/pershoot/KernelSU-Next/${KERNELSU_COMMIT}/kernel/setup.sh" \
+            | bash -s $KERNELSU_COMMIT
 
-      - name: Setup SUSFS
+      - name: Setup SUSFS (vendored pin 05f2019, rebased ACK 0c3d559)
         run: |
-          git clone --depth=1 -b gki-android14-6.1 \
-            https://gitlab.com/simonpunk/susfs4ksu \
-            susfs4ksu
-          cp susfs4ksu/kernel_patches/fs/susfs.c kernel/fs/
-          cp susfs4ksu/kernel_patches/include/linux/susfs*.h kernel/include/linux/
+          set -euo pipefail
+          # Vendored + pin: clone HEAD branch = moving target (susfs.c berubah
+          # 12 Sep tanpa perubahan output -> kontradiksi identity check 13 Sep).
+          # Patch ter-rebase WAJIB apply bersih vs ACK 0c3d559 — apply gagal =
+          # build gagal (tidak ada lagi || echo penelan; FAKTA: patch lama tidak
+          # pernah apply -> SUSFS core 0 string di SEMUA build terbit).
+          cp patches/susfs/fs/susfs.c kernel/fs/
+          cp patches/susfs/include/linux/susfs*.h kernel/include/linux/
           cd kernel
-          git apply ../susfs4ksu/kernel_patches/50_add_susfs_in_gki-android14-6.1.patch \
-            || echo "SUSFS patch applied with warnings or skipped"
+          git apply --check ../patches/susfs/50_add_susfs_in_gki-android14-6.1-ack-0c3d559.patch
+          git apply ../patches/susfs/50_add_susfs_in_gki-android14-6.1-ack-0c3d559.patch
+          grep -q "CONFIG_KSU_SUSFS" fs/Makefile || { echo "::error::SUSFS Makefile hunk tidak masuk"; exit 1; }
 
       - name: Build kernel
         run: |
@@ -386,8 +396,8 @@ jobs:
 
       - name: Verify zips & prepare release body
         env:
-          KSU_VER: v3.3.0
-          SUSFS_VER: v2.1.0
+          KSU_VER: 5dfc3359
+          SUSFS_VER: v2.3.0
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail

@@ -34,8 +34,13 @@ permissions:
 env:
   ARCH: arm64
   KERNEL_COMMIT: 0c3d559bcd85
-  KERNELSU_VERSION: v3.3.0
-  SUSFS_VERSION: v2.1.0
+  # KSU dev-susfs pin (HEAD 2026-09-15): simbol ksu_handle_post_execveat_sucompat
+  # dll. dibutuhkan patch SUSFS ter-rebase; tag v3.3.0 tidak punya (hook manager
+  # refactor). Sync dengan build-droidspaces.yml.
+  KERNELSU_VERSION: 5dfc3359
+  KERNELSU_COMMIT: 5dfc3359e1cf2f4d953c74205c8d06e6eaadbec0
+  # Label = versi nyata pin susfs4ksu 05f2019 (bukan lagi v2.1.0 mislabel).
+  SUSFS_VERSION: v2.3.0
   # Image baseline proven (run 34425680767, release Flavenz-20260910) —
   # hasil verifikasi identitas run 34743245600 (verify-payload-identity.yml).
   BASELINE_IMAGE_SHA: "8fd39a5537e39b97046bd1140546a47c7bf1a2042659108f9e8191a3b1b87e44"
@@ -198,22 +203,22 @@ jobs:
           cd ..
           rm sysvipc_kabi.patch
 
-      - name: Setup KernelSU Next (pershoot/dev-susfs)
+      - name: Setup KernelSU Next (pershoot/dev-susfs, pin commit)
         run: |
           cd kernel
-          curl -LSs "https://raw.githubusercontent.com/pershoot/KernelSU-Next/dev-susfs/kernel/setup.sh" \
-            | bash -s $KERNELSU_VERSION
+          curl -LSs "https://raw.githubusercontent.com/pershoot/KernelSU-Next/${KERNELSU_COMMIT}/kernel/setup.sh" \
+            | bash -s $KERNELSU_COMMIT
 
-      - name: Setup SUSFS
+      - name: Setup SUSFS (vendored pin 05f2019, rebased ACK 0c3d559)
         run: |
-          git clone --depth=1 -b gki-android14-6.1 \
-            https://gitlab.com/simonpunk/susfs4ksu \
-            susfs4ksu
-          cp susfs4ksu/kernel_patches/fs/susfs.c kernel/fs/
-          cp susfs4ksu/kernel_patches/include/linux/susfs*.h kernel/include/linux/
+          set -euo pipefail
+          # Sync dengan build-droidspaces.yml — vendored + pin + fail-hard.
+          cp patches/susfs/fs/susfs.c kernel/fs/
+          cp patches/susfs/include/linux/susfs*.h kernel/include/linux/
           cd kernel
-          git apply ../susfs4ksu/kernel_patches/50_add_susfs_in_gki-android14-6.1.patch \
-            || echo "SUSFS patch applied with warnings or skipped"
+          git apply --check ../patches/susfs/50_add_susfs_in_gki-android14-6.1-ack-0c3d559.patch
+          git apply ../patches/susfs/50_add_susfs_in_gki-android14-6.1-ack-0c3d559.patch
+          grep -q "CONFIG_KSU_SUSFS" fs/Makefile || { echo "::error::SUSFS Makefile hunk tidak masuk"; exit 1; }
 
       - name: Apply AutoFDO backport patch (Tahap 2)
         run: |
