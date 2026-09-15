@@ -23,7 +23,7 @@
 ## Build Goals
 - Kernel close to stock + Droidspaces for gaming
 - **Do not use** the Theettam kernel (BORE, ADIOS, BBRv3 etc. = unwanted performance tweaks)
-- Root: KernelSU Next v3.3.0
+- Root: KernelSU Next 5dfc3359 (pershoot dev-susfs pin)
 - Priorities: gaming performance + Droidspaces container
 
 ## Kernel Base Research
@@ -90,7 +90,7 @@ CONFIG_KALLSYMS=y / CONFIG_KALLSYMS_ALL=y
 - **Matrix of 1 job** (`fail-fast: false`) — since 2026-09-13:
   1. **ack-full** — clone ACK `kernel/common` @ `0c3d559bcd85` + defconfig from `Mohithash/kernel_xiaomi_sm8635` (dynamic branch fallback: `17` → `main` → `theettam-2.8` → `theettam-2.7`)
   - ~~**guidix-full** — clone `GuidixX/kernel_xiaomi_sm8635` branch `16.2`~~ → **REMOVED 2026-09-13**: bootlooped on-device after flashing the Guidix zip (recovery restored boot/dtbo/init_boot/vendor_boot from backup + re-flashed the NexiunOS ROM — device saved). Guidix zips deleted from all Releases.
-- Common steps: free disk space → install dependencies (bc, bison, flex, libssl, cpio, pahole, lz4, zstd, gcc-aarch64-linux-gnu, etc.) → setup Neutron Clang 30062026 + antman glibc patch → apply Droidspaces & container configs → apply kABI SYSVIPC patch → setup KernelSU Next v3.3.0 (pershoot/dev-susfs) → setup SUSFS v2.1.0 → build (`gki_defconfig` [+ `vendor/peridot_GKI.config`], `Image Image.gz dtbs`) → **Package AnyKernel3** → upload artifact
+- Common steps: free disk space → install dependencies (bc, bison, flex, libssl, cpio, pahole, lz4, zstd, gcc-aarch64-linux-gnu, etc.) → setup Neutron Clang 30062026 + antman glibc patch → apply Droidspaces & container configs → apply kABI SYSVIPC patch → setup KernelSU Next 5dfc3359 (pershoot dev-susfs pinned commit) → setup SUSFS v2.3.0 (patches/susfs vendored, fail-hard) → build (`gki_defconfig` [+ `vendor/peridot_GKI.config`], `Image Image.gz dtbs`) → **Package AnyKernel3** → upload artifact
 - Output: artifact per run + **automatic `release` job** — after the matrix job succeeds, the raw flashable zip + `SHA256SUMS.txt` are published as **GitHub Releases** assets (tag `Flavenz-YYYYMMDD`) with full notes; no zip-in-zip (release assets are never wrapped, unlike Actions artifacts)
 - Deterministic build: `KBUILD_BUILD_USER/HOST` pinned; `KBUILD_BUILD_TIMESTAMP` **dynamic** from the `rom_build_date` input (synced to the ROM's `ro.build.date` — fixes Duck Detector build-time drift, see the error table)
 
@@ -103,7 +103,7 @@ CONFIG_KALLSYMS=y / CONFIG_KALLSYMS_ALL=y
 
 ## Output ZIP (artifact per flavor)
 ```
-Peridot-Kernel-ACK-KSUNext-v3.3.0-SUSFS-v2.1.0-droidspaces-YYYYMMDD.zip       (ack-full; guidix-full REMOVED 2026-09-13)
+Peridot-Kernel-ACK-KSUNext-5dfc3359-SUSFS-v2.3.0-droidspaces-YYYYMMDD.zip       (ack-full; guidix-full REMOVED 2026-09-13)
 ```
 
 ## Toolchain
@@ -226,7 +226,7 @@ If another base is worth trying later, add it as a new matrix flavor and verify 
 
 ## Key References
 - Droidspaces config guide: `ravindu644/Droidspaces-OSS/blob/main/Documentation/Kernel-Configuration.md`
-- KernelSU Next setup: `curl -LSs "https://raw.githubusercontent.com/pershoot/KernelSU-Next/dev-susfs/kernel/setup.sh" | bash -s v3.3.0` (pershoot/dev-susfs — SUSFS hooks built in, proven via WildKernels r7-r12)
+- KernelSU Next setup: `curl -LSs "https://raw.githubusercontent.com/pershoot/KernelSU-Next/${KERNELSU_COMMIT}/kernel/setup.sh" | bash -s $KERNELSU_COMMIT` (pin `5dfc3359e1cf2f4d953c74205c8d06e6eaadbec0` — SUSFS hooks built in); SUSFS: `patches/susfs/` vendored (susfs4ksu `05f2019`, v2.3.0 + `50_add` rebased vs ACK `0c3d559`, `git apply --check` then apply, fail-hard)
 - SUSFS branch for kernel 6.1: `gki-android14-6.1` on `gitlab.com/simonpunk/susfs4ksu`
 - Antman (Neutron glibc patcher): `github.com/Neutron-Toolchains/antman`
 - MiCode peridot source: `github.com/MiCode/Xiaomi_Kernel_OpenSource` branch `peridot-u-oss`
