@@ -517,6 +517,7 @@ jobs:
               --profile="patched/in$j.data" \
               --format=extbinary \
               --use_fs_discriminator \
+              --focus_binary_re='^\[kernel\.kallsyms\]$' \
               --out="patched/out$j.afdo" \
               --prof_sym_list=false
             ls -lh "patched/out$j.afdo"
