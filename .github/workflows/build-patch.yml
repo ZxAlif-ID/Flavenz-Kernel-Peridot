@@ -1,0 +1,240 @@
+name: Build Patch - Peridot (AK3 only)
+
+# Jalur cepat (~2 menit): skip kompilasi, ambil Image dari artifact run
+# build-droidspaces.yml terakhir yang sukses, langsung repackage ke zip
+# AnyKernel3 baru. Berguna untuk:
+#   - Update anykernel.sh / banner / installer tanpa rebuild kernel
+#   - Distribusi patch ke Image yang sudah proven boot-verified
+#   - Testing perubahan packaging sebelum full build
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: "Run ID build-droidspaces.yml sumber Image (kosong = run sukses terakhir di main)"
+        required: false
+        default: ""
+      patch_label:
+        description: "Label patch untuk nama zip dan release (contoh: hotfix1, banner-fix)"
+        required: false
+        default: "patch"
+      publish_release:
+        description: "Publish ke GitHub Releases sebagai pre-release (true/false)"
+        required: false
+        default: "true"
+
+jobs:
+  patch:
+    name: Repackage Image -> AK3 patch zip
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      KERNELSU_VERSION: 66fe35ec
+      SUSFS_VERSION: v2.3.0
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Resolve source run ID
+        run: |
+          set -euo pipefail
+          SOURCE="${{ github.event.inputs.source_run_id }}"
+          SOURCE=$(printf '%s' "${SOURCE}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+
+          if [ -z "${SOURCE}" ]; then
+            echo "Source run ID kosong, cari run sukses terakhir build-droidspaces.yml di main..."
+            WF_ID=$(gh api \
+              "repos/${GITHUB_REPOSITORY}/actions/workflows" \
+              --jq '.workflows[] | select(.name | test("Peridot.*ACK"; "i")) | .id' | head -n1)
+            [ -z "${WF_ID}" ] && { echo "::error::Workflow build-droidspaces tidak ditemukan"; exit 1; }
+            RUN_ID=$(gh api \
+              "repos/${GITHUB_REPOSITORY}/actions/workflows/${WF_ID}/runs?branch=main&status=success&per_page=5" \
+              --jq '[.workflow_runs[] | select(.conclusion == "success")] | .[0].id')
+            [ -z "${RUN_ID}" ] || [ "${RUN_ID}" = "null" ] && { echo "::error::Tidak ada run sukses"; exit 1; }
+            echo "Run sukses ditemukan: ${RUN_ID}"
+          else
+            RUN_ID="${SOURCE}"
+            echo "Menggunakan run ID: ${RUN_ID}"
+          fi
+
+          echo "RUN_ID=${RUN_ID}" >> "$GITHUB_ENV"
+
+      - name: Download Image artifact dari source run
+        run: |
+          set -euo pipefail
+          mkdir -p source_artifacts
+
+          ARTIFACT_ID=$(gh api \
+            "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}/artifacts" \
+            --jq '[.artifacts[] | select(.name | test("Peridot-Kernel"; "i"))] | .[0].id')
+
+          if [ -z "${ARTIFACT_ID}" ] || [ "${ARTIFACT_ID}" = "null" ]; then
+            echo "::error::Artifact Peridot-Kernel tidak ditemukan di run ${RUN_ID}"
+            gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}/artifacts" \
+              --jq '.artifacts[] | "\(.id) \(.name)"'
+            exit 1
+          fi
+
+          echo "Download artifact ID: ${ARTIFACT_ID}"
+          gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${ARTIFACT_ID}/zip" \
+            > source_artifacts/artifact.zip
+
+          unzip -qo source_artifacts/artifact.zip -d source_artifacts/
+          rm -f source_artifacts/artifact.zip
+
+          IMAGE_FOUND=false
+          for f in source_artifacts/*.zip; do
+            [ -f "$f" ] || continue
+            if unzip -l "$f" | grep -q 'anykernel.sh'; then
+              echo "Flashable zip: $f"
+              unzip -qo "$f" Image -d source_artifacts/
+              IMAGE_FOUND=true
+              break
+            fi
+          done
+
+          if [ "${IMAGE_FOUND}" = false ] && [ -f source_artifacts/Image ]; then
+            IMAGE_FOUND=true
+          fi
+
+          [ "${IMAGE_FOUND}" = true ] || { echo "::error::Image tidak ditemukan di run ${RUN_ID}"; exit 1; }
+          ls -lh source_artifacts/Image
+
+      - name: Package AnyKernel3 patch zip
+        run: |
+          set -euo pipefail
+          DATE=$(date +%Y%m%d)
+          PATCH_LABEL="${{ github.event.inputs.patch_label }}"
+          PATCH_LABEL=$(printf '%s' "${PATCH_LABEL}" | sed 's/[^a-zA-Z0-9_-]/-/g')
+          [ -z "${PATCH_LABEL}" ] && PATCH_LABEL="patch"
+
+          ZIPNAME="Peridot-Kernel-ACK-KSUNext-${KERNELSU_VERSION}-SUSFS-${SUSFS_VERSION}-droidspaces-${DATE}-${PATCH_LABEL}.zip"
+          ZIPPATH="${GITHUB_WORKSPACE}/${ZIPNAME}"
+
+          echo "ZIPNAME=${ZIPNAME}" >> "$GITHUB_ENV"
+          echo "ZIPPATH=${ZIPPATH}" >> "$GITHUB_ENV"
+          echo "RELEASEDATE=${DATE}" >> "$GITHUB_ENV"
+          echo "PATCH_LABEL=${PATCH_LABEL}" >> "$GITHUB_ENV"
+
+          cd anykernel
+
+          # Generate anykernel.sh dengan ASCII banner.
+          # ATURAN: ZERO backslash literal, ZERO dollar ($), ZERO backtick (`) di baris banner.
+          # printf '%s\n' mengoutput setiap arg sebagai satu baris — aman.
+          # Banner menggunakan karakter: + | / - space huruf angka titik.
+          printf '%s\n' \
+            '# AnyKernel3 Ramdisk Mod Script' \
+            '# osm0sis @ xda-developers' \
+            '' \
+            '## AnyKernel setup' \
+            '# begin properties' \
+            "properties() { '" \
+            "kernel.string=Flavenz Kernel (ack-full) by ZxAlif-ID" \
+            'do.devicecheck=1' \
+            'do.modules=0' \
+            'do.systemless=1' \
+            'do.cleanup=1' \
+            'do.cleanuponabort=0' \
+            'device.name1=peridot' \
+            'device.name2=peridot_global' \
+            "'; } # end properties" \
+            '' \
+            '## AnyKernel install' \
+            'block=boot;' \
+            'is_slot_device=auto;' \
+            'ramdisk_compression=auto;' \
+            'patch_vbmeta_flag=auto;' \
+            'no_magisk_check=1;' \
+            '' \
+            '. tools/ak3-core.sh;' \
+            '' \
+            'ui_print " ";' \
+            'ui_print "+================================================+";' \
+            'ui_print "|                                                |";' \
+            'ui_print "|   FLAVENZ KERNEL  //  POCO F6  //  Peridot    |";' \
+            'ui_print "|   by ZxAlif-ID   //  ACK 6.1  //  SM8635     |";' \
+            'ui_print "|                                                |";' \
+            'ui_print "+================================================+";' \
+            'ui_print "|   Mode : PATCH (repackage, no recompile)       |";' \
+            "ui_print \"|   KSU  : ${KERNELSU_VERSION}   SUSFS : ${SUSFS_VERSION}             |\";" \
+            'ui_print "+================================================+";' \
+            'ui_print " ";' \
+            'split_boot;' \
+            'ui_print ">> Flashing Flavenz Kernel (PATCH)...";' \
+            'flash_boot;' \
+            'ui_print " ";' \
+            'ui_print "[DONE] Flash selesai. Wipe Dalvik/Cache lalu reboot.";' \
+            'ui_print " ";' \
+            > anykernel.sh
+
+          bash -n anykernel.sh || { echo "::error::anykernel.sh syntax check failed"; exit 1; }
+
+          cp "${GITHUB_WORKSPACE}/source_artifacts/Image" ./Image
+          [ -s "./Image" ] || { echo "::error::Image kosong"; exit 1; }
+
+          zip -r9 "${ZIPPATH}" . -x "*.git*" "LICENSE.txt" > /dev/null
+          [ -s "${ZIPPATH}" ] || { echo "::error::zip not created: ${ZIPPATH}"; exit 1; }
+          ls -lh "${ZIPPATH}"
+          echo "Patch zip created: ${ZIPNAME}"
+
+      - name: Upload patch artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Peridot-Patch-${{ env.PATCH_LABEL }}-${{ env.RELEASEDATE }}
+          path: Peridot-Kernel-*.zip
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish patch pre-release
+        if: ${{ github.event.inputs.publish_release == 'true' }}
+        run: |
+          set -euo pipefail
+          mv "${ZIPPATH}" ./
+          ZIPBASE=$(basename "${ZIPPATH}")
+          sha256sum "${ZIPBASE}" > SHA256SUMS.txt
+
+          REL_TAG="Flavenz-${RELEASEDATE}-${PATCH_LABEL}"
+          REL_TITLE="Flavenz Kernel Peridot PATCH -- ${RELEASEDATE} (${PATCH_LABEL})"
+
+          # Release notes ditulis via printf per baris (hindari heredoc di YAML)
+          {
+            printf '%s\n' "## Flavenz Kernel PATCH ${RELEASEDATE} (${PATCH_LABEL})"
+            printf '%s\n' ""
+            printf '%s\n' "Bukan full build -- Image diambil dari run ${RUN_ID}, packaging diperbarui."
+            printf '%s\n' ""
+            printf '%s\n' "### Isi"
+            printf '%s\n' "- KernelSU Next ${KERNELSU_VERSION} (pershoot dev-susfs)"
+            printf '%s\n' "- SUSFS ${SUSFS_VERSION}"
+            printf '%s\n' "- Droidspaces full support (MACVLAN, IPv6 NAT, CFS bandwidth, CGROUP PIDs)"
+            printf '%s\n' "- SHA256SUMS.txt untuk verifikasi integritas"
+            printf '%s\n' ""
+            printf '%s\n' "### Cara flash"
+            printf '%s\n' "1. Download zip di bawah (langsung flashable, tanpa ekstrak)"
+            printf '%s\n' "2. Reboot ke OS dulu, lalu masuk recovery (agar /apex tidak ter-mount)"
+            printf '%s\n' "3. Flash via OrangeFox/TWRP, Wipe Dalvik/Cache, Reboot"
+            printf '%s\n' ""
+            printf '%s\n' "Project pribadi AS-IS tanpa garansi. Backup boot dan init_boot sebelum flash."
+          } > rel_body.md
+
+          if gh release view "${REL_TAG}" -R "${GITHUB_REPOSITORY}" > /dev/null 2>&1; then
+            echo "Release ${REL_TAG} sudah ada, hapus dulu"
+            gh release delete "${REL_TAG}" -R "${GITHUB_REPOSITORY}" --yes --cleanup-tag
+          fi
+
+          gh release create "${REL_TAG}" \
+            -R "${GITHUB_REPOSITORY}" \
+            --target "${GITHUB_SHA}" \
+            --title "${REL_TITLE}" \
+            --notes-file rel_body.md \
+            --prerelease \
+            "${ZIPBASE}" SHA256SUMS.txt
+
+          echo "=== patch release terbit ==="
+          gh release view "${REL_TAG}" -R "${GITHUB_REPOSITORY}" \
+            --json name,tagName,assets \
+            --jq '"[\(.tagName)] " + ([.assets[].name] | join(", "))'

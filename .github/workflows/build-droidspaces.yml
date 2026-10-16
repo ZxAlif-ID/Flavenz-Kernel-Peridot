@@ -341,8 +341,10 @@ jobs:
           # di mesin lokal — jadi sumber masalahnya runner, bukan repo-nya.
           cd anykernel
 
-          # block=boot + is_slot_device=auto: identical to Mohithash's anykernel.sh
-          # proven to flash & boot on peridot (incl. OrangeFox R12 — logs/recovery.log)
+          # Generate anykernel.sh dengan ASCII banner.
+          # ATURAN: ZERO backslash literal, ZERO dollar ($), ZERO backtick di baris banner.
+          # printf '%s\n' mengoutput setiap arg sebagai satu baris — aman untuk YAML.
+          # Banner: karakter + | / - space huruf angka titik saja. Verified safe.
           printf '%s\n' \
             '# AnyKernel3 Ramdisk Mod Script' \
             '# osm0sis @ xda-developers' \
@@ -361,25 +363,37 @@ jobs:
             "'; } # end properties" \
             '' \
             '## AnyKernel install' \
-            '# boot shell variables' \
             'block=boot;' \
             'is_slot_device=auto;' \
             'ramdisk_compression=auto;' \
             'patch_vbmeta_flag=auto;' \
             'no_magisk_check=1;' \
             '' \
-            '# import functions/variables and setup patching (DO NOT REMOVE)' \
             '. tools/ak3-core.sh;' \
             '' \
-            "ui_print \"Flashing Flavenz Kernel (${FLAVOR})...\";" \
+            'ui_print " ";' \
+            'ui_print "+================================================+";' \
+            'ui_print "|                                                |";' \
+            'ui_print "|   FLAVENZ KERNEL  //  POCO F6  //  Peridot    |";' \
+            'ui_print "|   by ZxAlif-ID   //  ACK 6.1  //  SM8635     |";' \
+            'ui_print "|                                                |";' \
+            'ui_print "+================================================+";' \
+            "ui_print \"|   KSU  : ${KERNELSU_VERSION}   SUSFS : ${SUSFS_VERSION}   Droidspaces   |\";" \
+            'ui_print "+================================================+";' \
+            'ui_print " ";' \
             'split_boot;' \
+            'ui_print ">> Flashing Flavenz Kernel...";' \
             'flash_boot;' \
+            'ui_print " ";' \
+            'ui_print "[DONE] Flash selesai. Wipe Dalvik/Cache lalu reboot.";' \
+            'ui_print " ";' \
             > anykernel.sh
+
+          bash -n anykernel.sh || { echo "::error::anykernel.sh syntax check failed"; exit 1; }
 
           cp ../kernel/out/arch/arm64/boot/Image ./Image
 
           zip -r9 "${ZIPPATH}" . -x "*.git*" "LICENSE.txt" > /dev/null
-          # Verifikasi keras: zip harus benar-benar ada dan tidak kosong.
           [ -s "${ZIPPATH}" ] || { echo "::error::zip not created: ${ZIPPATH}"; exit 1; }
           ls -lh "${ZIPPATH}"
           echo "Successfully created ${ZIPNAME}"
