@@ -30,11 +30,13 @@ jobs:
     env:
       ARCH: arm64
       KERNEL_COMMIT: 0c3d559bcd85
-      # KSU dev-susfs pin (HEAD 2026-09-15): punya ksu_handle_post_execveat_sucompat
+      # KSU dev-susfs pin (HEAD 2026-10-16): punya ksu_handle_post_execveat_sucompat
       # + ksu_install_su_fd yang dibutuhkan patch SUSFS ter-rebase. Tag v3.3.0 TIDAK
       # punya simbol itu (refactor hook manager) -> SUSFS dulu tak pernah bisa jalan.
-      KERNELSU_VERSION: 5dfc3359
-      KERNELSU_COMMIT: 5dfc3359e1cf2f4d953c74205c8d06e6eaadbec0
+      # Update 2026-10-16: dev-susfs HEAD 66fe35ecf872 — SUSFS LKM dead man's switch,
+      # open_redirect scheme 4, sus_path stat/dirent post-checks (PR #1616).
+      KERNELSU_VERSION: 66fe35ec
+      KERNELSU_COMMIT: 66fe35ecf872f60dcd033bebc308e8e2820ffc74
       # Label = versi nyata di pin susfs4ksu 05f2019 (v2.3.0 sejak 2026-08-30;
       # label lama v2.1.0 = mislabel murni, susfs core tak pernah ter-compile).
       SUSFS_VERSION: v2.3.0
@@ -204,7 +206,18 @@ jobs:
             CONFIG_LTO_CLANG_THIN=y \
             CONFIG_KALLSYMS=y \
             CONFIG_KALLSYMS_ALL=y \
+            CONFIG_MACVLAN=y \
+            CONFIG_IP6_NF_NAT=m \
+            CONFIG_IP6_NF_TARGET_MASQUERADE=m \
+            CONFIG_CFS_BANDWIDTH=y \
+            CONFIG_CGROUP_PIDS=y \
             >> "$CONFIG_FILE"
+          # Verifikasi semua Droidspaces optional configs terpasang
+          for cfg in CONFIG_MACVLAN CONFIG_IP6_NF_NAT CONFIG_IP6_NF_TARGET_MASQUERADE \
+                     CONFIG_CFS_BANDWIDTH CONFIG_CGROUP_PIDS; do
+            grep -q "^${cfg}" "$CONFIG_FILE" \
+              || { echo "::error::${cfg} tidak masuk ke $CONFIG_FILE"; exit 1; }
+          done
           cd ..
 
       - name: Apply kABI SYSVIPC patch (GKI 6.1)
@@ -396,7 +409,7 @@ jobs:
 
       - name: Verify zips & prepare release body
         env:
-          KSU_VER: 5dfc3359
+          KSU_VER: 66fe35ec
           SUSFS_VER: v2.3.0
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
@@ -445,9 +458,9 @@ jobs:
             echo "| \`ack-full\` | ACK android14-6.1 @ \`0c3d559bcd85\` + defconfig Mohithash |"
             echo ""
             echo "### Isi (tanpa zip dalam zip — langsung flashable)"
-            echo "- \`${KSU_VER}\` KernelSU Next (pershoot dev-susfs, via init_boot)"
+            echo "- \`${KSU_VER}\` KernelSU Next (pershoot dev-susfs 2026-10-16: SUSFS LKM dead man's switch, open_redirect scheme 4)"
             echo "- SUSFS \`${SUSFS_VER}\`"
-            echo "- Droidspaces (container) support"
+            echo "- Droidspaces full support (MACVLAN, IPv6 NAT, CFS bandwidth, CGROUP PIDs)"
             echo "- \`SHA256SUMS.txt\` tersedia untuk verifikasi integritas"
             echo ""
             echo "### Peringatan"
