@@ -34,16 +34,18 @@ permissions:
 env:
   ARCH: arm64
   KERNEL_COMMIT: 0c3d559bcd85
-  # KSU dev-susfs pin (HEAD 2026-09-15): simbol ksu_handle_post_execveat_sucompat
-  # dll. dibutuhkan patch SUSFS ter-rebase; tag v3.3.0 tidak punya (hook manager
-  # refactor). Sync dengan build-droidspaces.yml.
-  KERNELSU_VERSION: 5dfc3359
-  KERNELSU_COMMIT: 5dfc3359e1cf2f4d953c74205c8d06e6eaadbec0
-  # Label = versi nyata pin susfs4ksu 05f2019 (bukan lagi v2.1.0 mislabel).
+  # KSU dev-susfs HEAD 2026-10-16 — sync dengan build-droidspaces.yml commit d59fcd6.
+  # Bumped dari 5dfc3359 (Sep 15) → 66fe35ec (Oct 16): SUSFS LKM dead man's switch,
+  # open_redirect scheme 4, sus_path stat/dirent post-checks, LKM coexistence.
+  KERNELSU_VERSION: 66fe35ec
+  KERNELSU_COMMIT: 66fe35ecf872f60dcd033bebc308e8e2820ffc74
+  # Label = versi nyata pin susfs4ksu (built-in kernel patch, bukan LKM).
   SUSFS_VERSION: v2.3.0
-  # Image baseline proven (run 34425680767, release Flavenz-20260910) —
-  # hasil verifikasi identitas run 34743245600 (verify-payload-identity.yml).
-  BASELINE_IMAGE_SHA: "8fd39a5537e39b97046bd1140546a47c7bf1a2042659108f9e8191a3b1b87e44"
+  # Image baseline proven = run #16 (38975335661, release Flavenz-20261016, commit eabd4b3d).
+  # SHA zip: ba6d19cde2ef4d6611a5db697ec899ed80159873e537d0d10b8d00ea6674b106
+  # SHA Image dalam zip: diisi setelah plumbing-only run berhasil (baseline check opsional
+  # untuk mode convert-profile/build-final — hanya aktif di plumbing-only tanpa profil).
+  BASELINE_IMAGE_SHA: "ba6d19cde2ef4d6611a5db697ec899ed80159873e537d0d10b8d00ea6674b106"
   KBUILD_BUILD_USER: "builder"
   KBUILD_BUILD_HOST: "droidspaces-ci"
 
