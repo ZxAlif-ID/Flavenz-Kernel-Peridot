@@ -194,8 +194,10 @@ jobs:
         if: ${{ github.event.inputs.publish_release == 'true' }}
         run: |
           set -euo pipefail
-          mv "${ZIPPATH}" ./
           ZIPBASE=$(basename "${ZIPPATH}")
+          # mv hanya kalau zip tidak sudah ada di cwd (hindari "same file" error)
+          [ "$(realpath "${ZIPPATH}")" != "$(realpath "${ZIPBASE}" 2>/dev/null || echo '__missing__')" ] && \
+            mv "${ZIPPATH}" ./ || true
           sha256sum "${ZIPBASE}" > SHA256SUMS.txt
 
           REL_TAG="Flavenz-${RELEASEDATE}-${PATCH_LABEL}"
