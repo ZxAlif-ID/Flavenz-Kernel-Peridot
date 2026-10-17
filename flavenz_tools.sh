@@ -12,8 +12,10 @@ if [ "$(id -u)" != "0" ]; then
 fi
 
 # ─── CONSTANTS ────────────────────────────────
-VERSION="1.0.0"
+VERSION="1.1.0"
 PROFILE_DIR="/sdcard/Project/Kernel/Profile"
+DOWNLOAD_DIR="/sdcard/Download"
+GH_REPO="ZxAlif-ID/Flavenz-Kernel-Peridot"
 PERF_LOG="$PROFILE_DIR/perf_session.log"
 PERF_PID_FILE="/data/local/tmp/.flavenz_perf_pid"
 DIAG_OUT="/sdcard/Project/Kernel/Profile/flavenz_diag_$(date +%Y%m%d_%H%M%S).txt"
@@ -202,7 +204,8 @@ dashboard() {
 
   nl
   sep
-  dim "Profile dir: $PROFILE_DIR"
+  dim "Profile dir  : $PROFILE_DIR"
+  dim "Download dir : $DOWNLOAD_DIR"
   nl
 }
 
@@ -515,38 +518,288 @@ view_log() {
   esac
 }
 
-# ─── INSTALL MODULE ───────────────────────────
-install_module() {
-  banner
-  printf "${MG}${BOLD}  ● DOWNLOAD & INFO MODULE${R}\n"
-  sep
+# ─── DYNAMIC DOWNLOAD MANAGER ────────────────
+download_file() {
+  _url="$1"
+  _dest="$2"
+  _sha_url="$3"
+  _name="$(basename "$_dest")"
+
+  mkdir -p "$(dirname "$_dest")"
+  nl
+  info "Mengunduh: ${CY}${_name}${R}"
+  dim "URL    : ${_url}"
+  dim "Tujuan : ${_dest}"
   nl
 
-  info "flavenz_perf_v1.0.0.zip — KSU-Next Magisk module"
-  nl
-  printf "  ${WH}Download ke /sdcard/:${R}\n"
-  printf "  ${CY}curl -fsSL https://github.com/ZxAlif-ID/Flavenz-Kernel-Peridot/raw/main/modules/flavenz_perf_v1.0.0.zip -o /sdcard/flavenz_perf_v1.0.0.zip${R}\n"
-  nl
-  printf "  ${WH}Kernel AutoFDO (latest):${R}\n"
-  printf "  ${CY}curl -fsSL https://github.com/ZxAlif-ID/Flavenz-Kernel-Peridot/releases/download/Flavenz-20261017-afdo/Peridot-Kernel-ACK-AutoFDO-KSUNext-66fe35ec-SUSFS-v2.3.0-droidspaces-20261017.zip -o /sdcard/Flavenz-afdo.zip${R}\n"
-  nl
+  if command -v curl >/dev/null 2>&1; then
+    curl -# -L -f "$_url" -o "$_dest"
+    _rc=$?
+  else
+    wget -q --show-progress -O "$_dest" "$_url"
+    _rc=$?
+  fi
 
-  printf "  ${YL}Download module sekarang? (y/n): ${R}"
-  read CONFIRM
-  if [ "$CONFIRM" = "y" ] || [ "$CONFIRM" = "Y" ]; then
-    if command -v curl > /dev/null 2>&1; then
-      curl -fsSL \
-        "https://github.com/ZxAlif-ID/Flavenz-Kernel-Peridot/raw/main/modules/flavenz_perf_v1.0.0.zip" \
-        -o /sdcard/flavenz_perf_v1.0.0.zip && \
-        ok "Downloaded → /sdcard/flavenz_perf_v1.0.0.zip" || \
-        err "Download failed — cek koneksi"
-    else
-      err "curl tidak ada. Pakai wget:"
-      dim "  wget -O /sdcard/flavenz_perf_v1.0.0.zip <url_diatas>"
+  if [ $_rc -eq 0 ] && [ -s "$_dest" ]; then
+    _sz=$(ls -lh "$_dest" 2>/dev/null | awk '{print $5}')
+    ok "Download selesai: ${G}${_name}${R} (${_sz})"
+    info "File tersimpan: ${CY}${_dest}${R}"
+
+    if [ -n "$_sha_url" ]; then
+      nl
+      info "Verifikasi checksum SHA256..."
+      _expected=$(curl -sL "$_sha_url" 2>/dev/null | grep "$_name" | awk '{print $1}')
+      if [ -n "$_expected" ]; then
+        _actual=$(sha256sum "$_dest" 2>/dev/null | awk '{print $1}')
+        if [ "$_expected" = "$_actual" ]; then
+          ok "SHA256 Cocok: ${G}${_actual:0:16}...${R} (VERIFIED)"
+        else
+          warn "SHA256 Mismatch!"
+          dim "Expected : ${_expected}"
+          dim "Actual   : ${_actual}"
+        fi
+      else
+        dim "File SHA256SUMS tidak memuat nama file ini"
+      fi
+    fi
+  else
+    err "Download gagal (${_name})! Periksa koneksi internet."
+    rm -f "$_dest" 2>/dev/null
+  fi
+}
+
+fetch_github_data() {
+  printf "  ${CY}↻${R} ${DM}Mengambil data release & module terbaru dari GitHub...${R}\n"
+
+  _cache_rel="/data/local/tmp/.flavenz_rel.json"
+  _cache_mod="/data/local/tmp/.flavenz_mod.json"
+
+  curl -sL --max-time 10 -H "User-Agent: FlavenzTools" \
+    "https://api.github.com/repos/${GH_REPO}/releases" > "$_cache_rel" 2>/dev/null
+
+  curl -sL --max-time 10 -H "User-Agent: FlavenzTools" \
+    "https://api.github.com/repos/${GH_REPO}/contents/modules" > "$_cache_mod" 2>/dev/null
+
+  REL_LIST=$(sed -e 's/[{}]/\n/g' -e 's/,/\n/g' "$_cache_rel" 2>/dev/null | \
+  awk '
+  BEGIN { tag=""; prerelease=""; zip_url=""; sha_url=""; zip_name="" }
+  /"tag_name":/ {
+    if (tag != "" && zip_url != "") {
+      print tag "|" prerelease "|" zip_name "|" zip_url "|" sha_url
+      zip_url = ""; sha_url = ""; zip_name = ""
+    }
+    s = $0; sub(/.*"tag_name":[ \t]*"/, "", s); sub(/".*/, "", s)
+    tag = s
+  }
+  /"prerelease":/ {
+    s = $0; sub(/.*"prerelease":[ \t]*/, "", s); sub(/[,\r\n ].*/, "", s)
+    prerelease = s
+  }
+  /"browser_download_url":/ {
+    s = $0; sub(/.*"browser_download_url":[ \t]*"/, "", s); sub(/".*/, "", s)
+    if (s ~ /\.zip$/) {
+      zip_url = s
+      n = split(s, parts, "/")
+      zip_name = parts[n]
+    } else if (s ~ /SHA256SUMS\.txt$/) {
+      sha_url = s
+    }
+  }
+  END {
+    if (tag != "" && zip_url != "") {
+      print tag "|" prerelease "|" zip_name "|" zip_url "|" sha_url
+    }
+  }
+  ')
+
+  MOD_LIST=$(sed -e 's/[{}]/\n/g' -e 's/,/\n/g' "$_cache_mod" 2>/dev/null | \
+  awk '
+  /"name":/ {
+    s = $0; sub(/.*"name":[ \t]*"/, "", s); sub(/".*/, "", s)
+    name = s
+  }
+  /"download_url":/ {
+    s = $0; sub(/.*"download_url":[ \t]*"/, "", s); sub(/".*/, "", s)
+    if (name ~ /\.zip$/) {
+      print name "|" s
+      name = ""
+    }
+  }
+  ')
+
+  AFDO_TAG=""; AFDO_ZIP=""; AFDO_URL=""; AFDO_SHA=""
+  STABLE_TAG=""; STABLE_ZIP=""; STABLE_URL=""; STABLE_SHA=""
+  MOD_NAME=""; MOD_URL=""
+
+  if [ -n "$REL_LIST" ]; then
+    _afdo_entry=$(echo "$REL_LIST" | grep -i "afdo" | head -1)
+    if [ -z "$_afdo_entry" ]; then
+      _afdo_entry=$(echo "$REL_LIST" | grep "|true|" | head -1)
+    fi
+    if [ -n "$_afdo_entry" ]; then
+      AFDO_TAG=$(echo "$_afdo_entry" | cut -d'|' -f1)
+      AFDO_ZIP=$(echo "$_afdo_entry" | cut -d'|' -f3)
+      AFDO_URL=$(echo "$_afdo_entry" | cut -d'|' -f4)
+      AFDO_SHA=$(echo "$_afdo_entry" | cut -d'|' -f5)
+    fi
+
+    _stable_entry=$(echo "$REL_LIST" | grep "|false|" | head -1)
+    if [ -n "$_stable_entry" ]; then
+      STABLE_TAG=$(echo "$_stable_entry" | cut -d'|' -f1)
+      STABLE_ZIP=$(echo "$_stable_entry" | cut -d'|' -f3)
+      STABLE_URL=$(echo "$_stable_entry" | cut -d'|' -f4)
+      STABLE_SHA=$(echo "$_stable_entry" | cut -d'|' -f5)
     fi
   fi
 
-  press_any
+  if [ -n "$MOD_LIST" ]; then
+    MOD_NAME=$(echo "$MOD_LIST" | head -1 | cut -d'|' -f1)
+    MOD_URL=$(echo "$MOD_LIST" | head -1 | cut -d'|' -f2)
+  fi
+
+  # Fallback jika offline / rate limited
+  if [ -z "$AFDO_URL" ]; then
+    AFDO_TAG="Flavenz-20261017-afdo-v2"
+    AFDO_ZIP="Peridot-Kernel-ACK-AutoFDO-KSUNext-66fe35ec-SUSFS-v2.3.0-droidspaces-20261017.zip"
+    AFDO_URL="https://github.com/${GH_REPO}/releases/download/${AFDO_TAG}/${AFDO_ZIP}"
+    AFDO_SHA="https://github.com/${GH_REPO}/releases/download/${AFDO_TAG}/SHA256SUMS.txt"
+  fi
+
+  if [ -z "$STABLE_URL" ]; then
+    STABLE_TAG="Flavenz-20261016"
+    STABLE_ZIP="Peridot-Kernel-ACK-KSUNext-66fe35ec-SUSFS-v2.3.0-droidspaces-20261016.zip"
+    STABLE_URL="https://github.com/${GH_REPO}/releases/download/${STABLE_TAG}/${STABLE_ZIP}"
+    STABLE_SHA="https://github.com/${GH_REPO}/releases/download/${STABLE_TAG}/SHA256SUMS.txt"
+  fi
+
+  if [ -z "$MOD_URL" ]; then
+    MOD_NAME="flavenz_perf_v1.0.0.zip"
+    MOD_URL="https://raw.githubusercontent.com/${GH_REPO}/main/modules/${MOD_NAME}"
+  fi
+}
+
+download_manager() {
+  mkdir -p "$DOWNLOAD_DIR"
+  banner
+  printf "${MG}${BOLD}  ● DOWNLOAD MANAGER (DYNAMIC GITHUB)${R}\n"
+  sep
+  nl
+  fetch_github_data
+
+  while true; do
+    banner
+    printf "${MG}${BOLD}  ● DOWNLOAD MANAGER (DYNAMIC GITHUB)${R}\n"
+    sep
+    nl
+    printf "  ${WH}Folder Tujuan:${R} ${CY}${DOWNLOAD_DIR}/${R}\n"
+    nl
+    sep
+    printf "  ${CY}${BOLD}[1] Latest AutoFDO Kernel${R} ${YL}(Rekomendasi)${R}\n"
+    printf "      Tag  : ${G}${AFDO_TAG}${R} ${DM}(Pre-release)${R}\n"
+    printf "      File : ${WH}${AFDO_ZIP}${R}\n"
+    nl
+    printf "  ${CY}${BOLD}[2] Latest Stable Kernel${R}\n"
+    printf "      Tag  : ${G}${STABLE_TAG}${R} ${DM}(Stable)${R}\n"
+    printf "      File : ${WH}${STABLE_ZIP}${R}\n"
+    nl
+    printf "  ${CY}${BOLD}[3] Latest Performance Module${R}\n"
+    printf "      File : ${WH}${MOD_NAME}${R}\n"
+    printf "      Tipe : ${DM}KSU-Next Magisk Module (X4 + uclamp + GPU + zstd)${R}\n"
+    nl
+    printf "  ${G}${BOLD}[4] Download Keduanya (Latest AutoFDO + Perf Module)${R}\n"
+    printf "  ${WH}${BOLD}[5] Pilih dari Daftar Semua Release${R}\n"
+    printf "  ${WH}${BOLD}[6] Ganti Folder Download${R} ${DM}(saat ini: ${DOWNLOAD_DIR})${R}\n"
+    printf "  ${CY}${BOLD}[7] Refresh Data GitHub${R}\n"
+    printf "  ${DM}${BOLD}[0] Kembali ke Menu Utama${R}\n"
+    sep
+    nl
+    printf "  ${CY}Pilih [0-7]: ${R}"
+    read DM_CHOICE
+
+    case "$DM_CHOICE" in
+      1)
+        download_file "$AFDO_URL" "${DOWNLOAD_DIR}/${AFDO_ZIP}" "$AFDO_SHA"
+        press_any ;;
+      2)
+        download_file "$STABLE_URL" "${DOWNLOAD_DIR}/${STABLE_ZIP}" "$STABLE_SHA"
+        press_any ;;
+      3)
+        download_file "$MOD_URL" "${DOWNLOAD_DIR}/${MOD_NAME}" ""
+        press_any ;;
+      4)
+        download_file "$AFDO_URL" "${DOWNLOAD_DIR}/${AFDO_ZIP}" "$AFDO_SHA"
+        download_file "$MOD_URL" "${DOWNLOAD_DIR}/${MOD_NAME}" ""
+        nl
+        ok "Semua file tersimpan di: ${CY}${DOWNLOAD_DIR}/${R}"
+        info "Langkah flash & install:"
+        dim "  1. Flash ${AFDO_ZIP} via KSU-Next Manager / Recovery (init_boot only)"
+        dim "  2. Reboot sistem"
+        dim "  3. Install ${MOD_NAME} via KSU-Next Manager (Modules -> Install)"
+        press_any ;;
+      5)
+        banner
+        printf "${CY}${BOLD}  ● SEMUA RELEASE FLAVENZ${R}\n"
+        sep
+        nl
+        if [ -z "$REL_LIST" ]; then
+          warn "Daftar release kosong atau GitHub API tidak terjangkau"
+          press_any
+          continue
+        fi
+
+        _idx=1
+        echo "$REL_LIST" | while IFS='|' read -r _tag _prerelease _zip _url _sha; do
+          if [ "$_prerelease" = "true" ]; then
+            _type="${YL}[Pre-release]${R}"
+          else
+            _type="${G}[Stable]${R}"
+          fi
+          printf "  ${BOLD}[%d]${R} %s %s\n      ${DM}%s${R}\n" "$_idx" "$_type" "$_tag" "$_zip"
+          _idx=$((_idx + 1))
+        done
+
+        nl
+        printf "  ${CY}Pilih nomor release (0 untuk batal): ${R}"
+        read SEL_NUM
+
+        if [ "$SEL_NUM" -gt 0 ] 2>/dev/null; then
+          _selected_line=$(echo "$REL_LIST" | sed -n "${SEL_NUM}p")
+          if [ -n "$_selected_line" ]; then
+            _sel_tag=$(echo "$_selected_line" | cut -d'|' -f1)
+            _sel_zip=$(echo "$_selected_line" | cut -d'|' -f3)
+            _sel_url=$(echo "$_selected_line" | cut -d'|' -f4)
+            _sel_sha=$(echo "$_selected_line" | cut -d'|' -f5)
+            download_file "$_sel_url" "${DOWNLOAD_DIR}/${_sel_zip}" "$_sel_sha"
+          else
+            warn "Nomor tidak valid"
+          fi
+        fi
+        press_any ;;
+      6)
+        banner
+        printf "${CY}${BOLD}  ● GANTI FOLDER DOWNLOAD${R}\n"
+        sep
+        nl
+        printf "  Folder sekarang : ${CY}%s${R}\n" "$DOWNLOAD_DIR"
+        printf "  ${YL}Masukkan path baru: ${R}"
+        read NEW_DIR
+        if [ -n "$NEW_DIR" ]; then
+          DOWNLOAD_DIR="$NEW_DIR"
+          mkdir -p "$DOWNLOAD_DIR"
+          ok "Folder download diubah ke: $DOWNLOAD_DIR"
+        fi
+        press_any ;;
+      7)
+        fetch_github_data
+        ok "Data GitHub diperbarui!"
+        sleep 1 ;;
+      0)
+        return ;;
+      *)
+        warn "Pilihan tidak valid"
+        sleep 1 ;;
+    esac
+  done
 }
 
 # ─── MAIN MENU ────────────────────────────────
@@ -563,7 +816,7 @@ main_menu() {
     printf "  ${YL}${BOLD}[5]${R}  Apply Performance Tuning (manual)\n"
     printf "  ${MG}${BOLD}[6]${R}  Diagnostic Dump → /sdcard/\n"
     printf "  ${CY}${BOLD}[7]${R}  Lihat Logs\n"
-    printf "  ${WH}${BOLD}[8]${R}  Download Module / Kernel Info\n"
+    printf "  ${WH}${BOLD}[8]${R}  Download Kernel & Module ${G}(Dynamic GitHub)${R}\n"
     nl
     printf "  ${DM}${BOLD}[0]${R}  ${DM}Exit${R}\n"
     nl
@@ -586,7 +839,7 @@ main_menu() {
       5) apply_tuning ;;
       6) run_diag ;;
       7) view_log ;;
-      8) install_module ;;
+      8) download_manager ;;
       0)
         clear
         printf "${MG}${BOLD}  Flavenz Tools — bye!${R}\n\n"
@@ -599,5 +852,5 @@ main_menu() {
 }
 
 # ─── ENTRY ────────────────────────────────────
-mkdir -p "$PROFILE_DIR"
+mkdir -p "$PROFILE_DIR" "$DOWNLOAD_DIR"
 main_menu
