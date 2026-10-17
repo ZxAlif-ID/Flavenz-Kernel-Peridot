@@ -12,7 +12,7 @@ if [ "$(id -u)" != "0" ]; then
 fi
 
 # ─── CONSTANTS ────────────────────────────────
-VERSION="1.1.0"
+VERSION="1.2.0"
 PROFILE_DIR="/sdcard/Project/Kernel/Profile"
 DOWNLOAD_DIR="/sdcard/Download"
 GH_REPO="ZxAlif-ID/Flavenz-Kernel-Peridot"
@@ -676,6 +676,11 @@ fetch_github_data() {
     MOD_NAME="flavenz_perf_v1.0.0.zip"
     MOD_URL="https://raw.githubusercontent.com/${GH_REPO}/main/modules/${MOD_NAME}"
   fi
+
+  # KSU-Next Manager APK Matching UAPI 6 (v3.4.2-33391)
+  APK_NAME="KernelSU_Next_v3.4.2-36-g16be0f72-spoofed_33391-release.apk"
+  APK_URL="https://github.com/${GH_REPO}/releases/download/Flavenz-20261017-afdo/${APK_NAME}"
+  APK_SHA="84642c3966f323af30766f0dfe5881653d33ec4bc76e8eb4130cd6763aa635db"
 }
 
 download_manager() {
@@ -706,14 +711,18 @@ download_manager() {
     printf "      File : ${WH}${MOD_NAME}${R}\n"
     printf "      Tipe : ${DM}KSU-Next Magisk Module (X4 + uclamp + GPU + zstd)${R}\n"
     nl
-    printf "  ${G}${BOLD}[4] Download Keduanya (Latest AutoFDO + Perf Module)${R}\n"
-    printf "  ${WH}${BOLD}[5] Pilih dari Daftar Semua Release${R}\n"
-    printf "  ${WH}${BOLD}[6] Ganti Folder Download${R} ${DM}(saat ini: ${DOWNLOAD_DIR})${R}\n"
-    printf "  ${CY}${BOLD}[7] Refresh Data GitHub${R}\n"
+    printf "  ${MG}${BOLD}[4] KSU-Next Manager APK (v3.4.2-33391 UAPI 6)${R} ${YL}(Matching Kernel)${R}\n"
+    printf "      File : ${WH}${APK_NAME}${R}\n"
+    printf "      Tipe : ${DM}Official Spoofed APK (Cocok persis UAPI 6 kernel driver)${R}\n"
+    nl
+    printf "  ${G}${BOLD}[5] Download Semua (Kernel + Perf Module + Manager APK)${R}\n"
+    printf "  ${WH}${BOLD}[6] Pilih dari Daftar Semua Release${R}\n"
+    printf "  ${WH}${BOLD}[7] Ganti Folder Download${R} ${DM}(saat ini: ${DOWNLOAD_DIR})${R}\n"
+    printf "  ${CY}${BOLD}[8] Refresh Data GitHub${R}\n"
     printf "  ${DM}${BOLD}[0] Kembali ke Menu Utama${R}\n"
     sep
     nl
-    printf "  ${CY}Pilih [0-7]: ${R}"
+    printf "  ${CY}Pilih [0-8]: ${R}"
     read DM_CHOICE
 
     case "$DM_CHOICE" in
@@ -727,16 +736,24 @@ download_manager() {
         download_file "$MOD_URL" "${DOWNLOAD_DIR}/${MOD_NAME}" ""
         press_any ;;
       4)
-        download_file "$AFDO_URL" "${DOWNLOAD_DIR}/${AFDO_ZIP}" "$AFDO_SHA"
-        download_file "$MOD_URL" "${DOWNLOAD_DIR}/${MOD_NAME}" ""
+        download_file "$APK_URL" "${DOWNLOAD_DIR}/${APK_NAME}" "$APK_SHA"
         nl
-        ok "Semua file tersimpan di: ${CY}${DOWNLOAD_DIR}/${R}"
-        info "Langkah flash & install:"
-        dim "  1. Flash ${AFDO_ZIP} via KSU-Next Manager / Recovery (init_boot only)"
-        dim "  2. Reboot sistem"
-        dim "  3. Install ${MOD_NAME} via KSU-Next Manager (Modules -> Install)"
+        ok "APK tersimpan di: ${CY}${DOWNLOAD_DIR}/${APK_NAME}${R}"
+        info "Silakan buka file manager di HP dan install APK di atas untuk update KSU Manager!"
         press_any ;;
       5)
+        download_file "$AFDO_URL" "${DOWNLOAD_DIR}/${AFDO_ZIP}" "$AFDO_SHA"
+        download_file "$MOD_URL" "${DOWNLOAD_DIR}/${MOD_NAME}" ""
+        download_file "$APK_URL" "${DOWNLOAD_DIR}/${APK_NAME}" "$APK_SHA"
+        nl
+        ok "Semua file tersimpan di: ${CY}${DOWNLOAD_DIR}/${R}"
+        info "Langkah instalasi:"
+        dim "  1. Install APK ${APK_NAME} (Manager UAPI 6 matching kernel)"
+        dim "  2. Flash ${AFDO_ZIP} via Recovery / KSU Manager (init_boot only)"
+        dim "  3. Reboot sistem"
+        dim "  4. Install ${MOD_NAME} via KSU-Next Manager (Modules -> Install)"
+        press_any ;;
+      6)
         banner
         printf "${CY}${BOLD}  ● SEMUA RELEASE FLAVENZ${R}\n"
         sep
@@ -775,7 +792,7 @@ download_manager() {
           fi
         fi
         press_any ;;
-      6)
+      7)
         banner
         printf "${CY}${BOLD}  ● GANTI FOLDER DOWNLOAD${R}\n"
         sep
@@ -789,7 +806,7 @@ download_manager() {
           ok "Folder download diubah ke: $DOWNLOAD_DIR"
         fi
         press_any ;;
-      7)
+      8)
         fetch_github_data
         ok "Data GitHub diperbarui!"
         sleep 1 ;;
