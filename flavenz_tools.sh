@@ -659,7 +659,7 @@ fetch_github_data() {
 
   # Fallback jika offline / rate limited
   if [ -z "$AFDO_URL" ]; then
-    AFDO_TAG="Flavenz-20261017-afdo-v2"
+    AFDO_TAG="Flavenz-20261017-afdo"
     AFDO_ZIP="Peridot-Kernel-ACK-AutoFDO-KSUNext-66fe35ec-SUSFS-v2.3.0-droidspaces-20261017.zip"
     AFDO_URL="https://github.com/${GH_REPO}/releases/download/${AFDO_TAG}/${AFDO_ZIP}"
     AFDO_SHA="https://github.com/${GH_REPO}/releases/download/${AFDO_TAG}/SHA256SUMS.txt"

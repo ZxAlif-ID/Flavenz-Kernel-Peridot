@@ -210,14 +210,13 @@ jobs:
             CONFIG_KALLSYMS=y \
             CONFIG_KALLSYMS_ALL=y \
             CONFIG_MACVLAN=y \
-            CONFIG_IP6_NF_NAT=m \
-            CONFIG_IP6_NF_TARGET_MASQUERADE=m \
-            CONFIG_CFS_BANDWIDTH=y \
-            CONFIG_CGROUP_PIDS=y \
+            CONFIG_IP6_NF_NAT=y \
+            CONFIG_IP6_NF_TARGET_MASQUERADE=y \
             >> "$CONFIG_FILE"
-          # Verifikasi semua Droidspaces optional configs terpasang
-          for cfg in CONFIG_MACVLAN CONFIG_IP6_NF_NAT CONFIG_IP6_NF_TARGET_MASQUERADE \
-                     CONFIG_CFS_BANDWIDTH CONFIG_CGROUP_PIDS; do
+          # Verifikasi Droidspaces optional configs (kABI-safe only: MACVLAN, IP6_NF_NAT, IP6_NF_TARGET_MASQUERADE)
+          # PERINGATAN KERAS: JANGAN aktifkan CONFIG_CFS_BANDWIDTH atau CONFIG_CGROUP_PIDS di GKI!
+          # Keduanya mengubah ukuran task_struct/cgroup -> merusak kABI vendor modules -> bootloop!
+          for cfg in CONFIG_MACVLAN CONFIG_IP6_NF_NAT CONFIG_IP6_NF_TARGET_MASQUERADE; do
             grep -q "^${cfg}" "$CONFIG_FILE" \
               || { echo "::error::${cfg} tidak masuk ke $CONFIG_FILE"; exit 1; }
           done
@@ -477,7 +476,7 @@ jobs:
             echo "### Isi (tanpa zip dalam zip — langsung flashable)"
             echo "- \`${KSU_VER}\` KernelSU Next (pershoot dev-susfs 2026-10-16: SUSFS LKM dead man's switch, open_redirect scheme 4)"
             echo "- SUSFS \`${SUSFS_VER}\`"
-            echo "- Droidspaces full support (MACVLAN, IPv6 NAT, CFS bandwidth, CGROUP PIDs)"
+            echo "- Droidspaces kABI-safe support (MACVLAN, IPv6 NAT, Namespaces, SYSVIPC, memcg)"
             echo "- \`SHA256SUMS.txt\` tersedia untuk verifikasi integritas"
             echo ""
             echo "### Peringatan"
