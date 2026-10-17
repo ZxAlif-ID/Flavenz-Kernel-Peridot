@@ -191,8 +191,19 @@ jobs:
             CONFIG_LTO_CLANG_THIN=y \
             CONFIG_KALLSYMS=y \
             CONFIG_KALLSYMS_ALL=y \
+            CONFIG_MACVLAN=y \
+            CONFIG_IP6_NF_NAT=m \
+            CONFIG_IP6_NF_TARGET_MASQUERADE=m \
+            CONFIG_CFS_BANDWIDTH=y \
+            CONFIG_CGROUP_PIDS=y \
             CONFIG_AUTOFDO_CLANG=y \
             >> "$CONFIG_FILE"
+          # Verifikasi Droidspaces optional configs
+          for cfg in CONFIG_MACVLAN CONFIG_IP6_NF_NAT CONFIG_IP6_NF_TARGET_MASQUERADE \
+                     CONFIG_CFS_BANDWIDTH CONFIG_CGROUP_PIDS; do
+            grep -q "^${cfg}" "$CONFIG_FILE" \
+              || { echo "::error::${cfg} tidak masuk ke $CONFIG_FILE"; exit 1; }
+          done
           echo "AUTOFDO_CONFIG_FILE=${CONFIG_FILE}" >> "$GITHUB_ENV"
           cd ..
 
