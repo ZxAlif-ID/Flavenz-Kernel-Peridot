@@ -33,7 +33,7 @@ jobs:
       actions: read
     env:
       GH_TOKEN: ${{ github.token }}
-      KERNELSU_VERSION: 66fe35ec
+      KERNELSU_VERSION: f8ab5e81
       SUSFS_VERSION: v2.3.0
 
     steps:

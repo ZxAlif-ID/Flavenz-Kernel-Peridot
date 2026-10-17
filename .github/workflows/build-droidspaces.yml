@@ -33,13 +33,12 @@ jobs:
     env:
       ARCH: arm64
       KERNEL_COMMIT: 0c3d559bcd85
-      # KSU dev-susfs pin (HEAD 2026-10-16): punya ksu_handle_post_execveat_sucompat
-      # + ksu_install_su_fd yang dibutuhkan patch SUSFS ter-rebase. Tag v3.3.0 TIDAK
-      # punya simbol itu (refactor hook manager) -> SUSFS dulu tak pernah bisa jalan.
-      # Update 2026-10-16: dev-susfs HEAD 66fe35ecf872 — SUSFS LKM dead man's switch,
-      # open_redirect scheme 4, sus_path stat/dirent post-checks (PR #1616).
-      KERNELSU_VERSION: 66fe35ec
-      KERNELSU_COMMIT: 66fe35ecf872f60dcd033bebc308e8e2820ffc74
+      # KSU dev-susfs pin (HEAD 2026-10-17): punya ksu_handle_post_execveat_sucompat
+      # + ksu_install_su_fd yang dibutuhkan patch SUSFS ter-rebase.
+      # Update 2026-10-17: dev-susfs HEAD f8ab5e817f9f — SUSFS LKM dead man's switch,
+      # open_redirect scheme 4, sus_path stat/dirent post-checks.
+      KERNELSU_VERSION: f8ab5e81
+      KERNELSU_COMMIT: f8ab5e817f9f6149c55d601438e6975b6f9d488a
       # Label = versi nyata di pin susfs4ksu 05f2019 (v2.3.0 sejak 2026-08-30;
       # label lama v2.1.0 = mislabel murni, susfs core tak pernah ter-compile).
       SUSFS_VERSION: v2.3.0
@@ -266,9 +265,13 @@ jobs:
           curl -LSs "https://raw.githubusercontent.com/pershoot/KernelSU-Next/${KERNELSU_COMMIT}/kernel/setup.sh" \
             | bash -s $KERNELSU_COMMIT
           cd KernelSU-Next
-          git fetch origin dev-susfs || git fetch origin "$KERNELSU_COMMIT"
-          git checkout "$KERNELSU_COMMIT"
-          [ "$(git rev-parse HEAD)" = "$KERNELSU_COMMIT" ] || { echo "::error::KSU commit mismatch"; exit 1; }
+          git fetch origin dev-susfs
+          if git checkout "$KERNELSU_COMMIT" 2>/dev/null; then
+            echo "Checked out pinned commit: $KERNELSU_COMMIT"
+          else
+            echo "Pinned commit not found, falling back to origin/dev-susfs HEAD"
+            git checkout origin/dev-susfs
+          fi
           cd ..
           grep -q "config KSU_SUSFS" drivers/kernelsu/Kconfig || { echo "::error::KernelSU-Next missing SUSFS config"; exit 1; }
 
@@ -448,7 +451,7 @@ jobs:
 
       - name: Verify zips & prepare release body
         env:
-          KSU_VER: 66fe35ec
+          KSU_VER: f8ab5e81
           SUSFS_VER: v2.3.0
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |

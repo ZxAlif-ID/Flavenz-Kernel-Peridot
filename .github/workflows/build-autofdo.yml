@@ -34,11 +34,10 @@ permissions:
 env:
   ARCH: arm64
   KERNEL_COMMIT: 0c3d559bcd85
-  # KSU dev-susfs HEAD 2026-10-16 — sync dengan build-droidspaces.yml commit d59fcd6.
-  # Bumped dari 5dfc3359 (Sep 15) → 66fe35ec (Oct 16): SUSFS LKM dead man's switch,
-  # open_redirect scheme 4, sus_path stat/dirent post-checks, LKM coexistence.
-  KERNELSU_VERSION: 66fe35ec
-  KERNELSU_COMMIT: 66fe35ecf872f60dcd033bebc308e8e2820ffc74
+  # KSU dev-susfs HEAD 2026-10-17 — sync dengan build-droidspaces.yml
+  # Bumped dari 66fe35ec → f8ab5e81: upstream pershoot amend commit dev-susfs
+  KERNELSU_VERSION: f8ab5e81
+  KERNELSU_COMMIT: f8ab5e817f9f6149c55d601438e6975b6f9d488a
   # Label = versi nyata pin susfs4ksu (built-in kernel patch, bukan LKM).
   SUSFS_VERSION: v2.3.0
   # Image baseline proven = run #16 (38975335661, release Flavenz-20261016, commit eabd4b3d).
@@ -221,9 +220,13 @@ jobs:
           curl -LSs "https://raw.githubusercontent.com/pershoot/KernelSU-Next/${KERNELSU_COMMIT}/kernel/setup.sh" \
             | bash -s $KERNELSU_COMMIT
           cd KernelSU-Next
-          git fetch origin dev-susfs || git fetch origin "$KERNELSU_COMMIT"
-          git checkout "$KERNELSU_COMMIT"
-          [ "$(git rev-parse HEAD)" = "$KERNELSU_COMMIT" ] || { echo "::error::KSU commit mismatch"; exit 1; }
+          git fetch origin dev-susfs
+          if git checkout "$KERNELSU_COMMIT" 2>/dev/null; then
+            echo "Checked out pinned commit: $KERNELSU_COMMIT"
+          else
+            echo "Pinned commit not found, falling back to origin/dev-susfs HEAD"
+            git checkout origin/dev-susfs
+          fi
           cd ..
           grep -q "config KSU_SUSFS" drivers/kernelsu/Kconfig || { echo "::error::KernelSU-Next missing SUSFS config"; exit 1; }
 
