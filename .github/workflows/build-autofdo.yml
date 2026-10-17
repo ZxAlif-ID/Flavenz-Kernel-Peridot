@@ -220,6 +220,12 @@ jobs:
           cd kernel
           curl -LSs "https://raw.githubusercontent.com/pershoot/KernelSU-Next/${KERNELSU_COMMIT}/kernel/setup.sh" \
             | bash -s $KERNELSU_COMMIT
+          cd KernelSU-Next
+          git fetch origin dev-susfs || git fetch origin "$KERNELSU_COMMIT"
+          git checkout "$KERNELSU_COMMIT"
+          [ "$(git rev-parse HEAD)" = "$KERNELSU_COMMIT" ] || { echo "::error::KSU commit mismatch"; exit 1; }
+          cd ..
+          grep -q "config KSU_SUSFS" drivers/kernelsu/Kconfig || { echo "::error::KernelSU-Next missing SUSFS config"; exit 1; }
 
       - name: Setup SUSFS (vendored pin 05f2019, rebased ACK 0c3d559)
         run: |
@@ -295,6 +301,23 @@ jobs:
           grep -q '^CONFIG_AUTOFDO_CLANG=y' out/.config \
             || { echo "::error::CONFIG_AUTOFDO_CLANG tidak aktif di .config"; exit 1; }
           echo "Gate 1 OK: CONFIG_AUTOFDO_CLANG=y di .config"
+          # Gate kABI-safety & features:
+          grep -q '^CONFIG_KSU=y' out/.config \
+            || { echo "::error::CONFIG_KSU tidak aktif di .config"; exit 1; }
+          grep -q '^CONFIG_KSU_SUSFS=y' out/.config \
+            || { echo "::error::CONFIG_KSU_SUSFS tidak aktif di .config"; exit 1; }
+          grep -q '^CONFIG_MACVLAN=y' out/.config \
+            || { echo "::error::CONFIG_MACVLAN tidak aktif di .config"; exit 1; }
+          grep -q '^CONFIG_IP6_NF_NAT=y' out/.config \
+            || { echo "::error::CONFIG_IP6_NF_NAT tidak aktif di .config"; exit 1; }
+          # Gate anti-bootloop (CFS_BANDWIDTH & CGROUP_PIDS merusak kABI):
+          if grep -q '^CONFIG_CFS_BANDWIDTH=y' out/.config; then
+            echo "::error::FATAL: CONFIG_CFS_BANDWIDTH aktif! Akan menyebabkan bootloop."; exit 1;
+          fi
+          if grep -q '^CONFIG_CGROUP_PIDS=y' out/.config; then
+            echo "::error::FATAL: CONFIG_CGROUP_PIDS aktif! Akan menyebabkan bootloop."; exit 1;
+          fi
+          echo "Gate kABI & Features OK: KSU+SUSFS+MACVLAN+IP6_NAT aktif, CFS_BANDWIDTH/PIDS nonaktif"
           # Gate 2: banner uname patok sublevel proven (suffix commit bebas)
           BANNER=$(strings out/arch/arm64/boot/Image | grep -m1 'Linux version')
           echo "Banner: ${BANNER}"
