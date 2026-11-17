@@ -8,7 +8,7 @@
 [![KSUNext](https://img.shields.io/badge/KSUNext-5dfc3359-purple.svg)](https://github.com/KernelSU/KernelSU)
 [![SUSFS](https://img.shields.io/badge/SUSFS-v2.3.0-red.svg)](https://github.com/simonpunk/susfs4ksu)
 [![License](https://img.shields.io/badge/License-GPLv2-yellow.svg)](LICENSE)
-[![Release](https://img.shields.io/github/v/release/ZxAlif-ID/Flavenz-Kernel-Peridot?include_prereleases&logo=github)](https://github.com/ZxAlif-ID/Flavenz-Kernel-Peridot/releases/latest)
+[![Release](https://img.shields.io/github/v/release/ZxAlif-ID/Flavenz-Kernel-Peridot?logo=github)](https://github.com/ZxAlif-ID/Flavenz-Kernel-Peridot/releases/latest)
 
 *Kernel GKI kustom bersih berkinerja tinggi — dibangun untuk stabilitas gaming maksimal, KernelSU Next, penyembunyian root SUSFS, dan dukungan container Droidspaces native.*
 
@@ -93,7 +93,7 @@ Suhu puncak: 40,3°C → 33,8°C dengan cooler aktif (−6,5°C). Rincian penuh,
 
 ### GitHub Releases (disarankan — satu zip flashable, tanpa nesting)
 
-Setiap build sukses otomatis menerbitkan **GitHub Release** (`Flavenz-YYYYMMDD`) berisi:
+Setiap build sukses otomatis menerbitkan **GitHub Release** — build stabil `Flavenz-YYYYMMDD`, eksperimen AutoFDO sebagai **prerelease** `Flavenz-YYYYMMDD-afdo` — berisi:
 
 - `Peridot-Kernel-ACK-…-YYYYMMDD.zip` (ack-full) — zip flashable mentah
 - `SHA256SUMS.txt` — checksum untuk verifikasi integritas sebelum flash
@@ -132,7 +132,7 @@ Workflow GitHub Actions otomatis penuh (`.github/workflows/build-droidspaces.yml
 - Trigger manual via **workflow_dispatch** (Actions → Run workflow).
 - Matrix **1 job**: `ack-full` (flavor lama `guidix-full` dihapus 2026-09-13 — bootloop on-device).
 - Langkah: free disk space → install dependencies → setup Neutron Clang (+ antman patch glibc) → clone source kernel per flavor → apply config Droidspaces + ThinLTO → apply patch kABI SYSVIPC → setup KernelSU Next 5dfc3359 (pershoot dev-susfs, pinned commit) → setup SUSFS v2.3.0 (vendored patch, fail-hard) → build (`Image`, `Image.gz`, `dtbs`) dengan **timestamp build sinkron ROM** (input `rom_build_date` — menjaga `uname -a` selaras tanggal build ROM agar integrity checker seperti Duck Detector tidak menandai drift) → package zip AnyKernel3 (folder `anykernel/` vendor + `anykernel.sh` generate) → upload artifact.
-- **Job release**: setelah job matrix sukses, job `release` menerbitkan zip flashable mentah + `SHA256SUMS.txt` ke GitHub Releases (tag `Flavenz-YYYYMMDD`) lengkap dengan catatan rilis — tanpa zip-dalam-zip.
+- **Job release**: setelah job matrix sukses, job `release` menerbitkan zip flashable mentah + `SHA256SUMS.txt` ke GitHub Releases (tag `Flavenz-YYYYMMDD`, atau `Flavenz-YYYYMMDD-afdo` bertanda prerelease untuk run AutoFDO) lengkap dengan catatan rilis — tanpa zip-dalam-zip.
 
 Lihat `docs/kernel-context.md` (atau [terjemahan Inggris](docs/kernel-context.en.md)) untuk rincian teknis penuh dan log error-fix.
 

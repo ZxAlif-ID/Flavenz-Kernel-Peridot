@@ -8,7 +8,7 @@
 [![KSUNext](https://img.shields.io/badge/KSUNext-5dfc3359-purple.svg)](https://github.com/KernelSU/KernelSU)
 [![SUSFS](https://img.shields.io/badge/SUSFS-v2.3.0-red.svg)](https://github.com/simonpunk/susfs4ksu)
 [![License](https://img.shields.io/badge/License-GPLv2-yellow.svg)](LICENSE)
-[![Release](https://img.shields.io/github/v/release/ZxAlif-ID/Flavenz-Kernel-Peridot?include_prereleases&logo=github)](https://github.com/ZxAlif-ID/Flavenz-Kernel-Peridot/releases/latest)
+[![Release](https://img.shields.io/github/v/release/ZxAlif-ID/Flavenz-Kernel-Peridot?logo=github)](https://github.com/ZxAlif-ID/Flavenz-Kernel-Peridot/releases/latest)
 
 *High-Performance, Clean GKI Custom Kernel engineered for Maximum Gaming Stability, KernelSU Next, SUSFS Root Concealment, and Native Droidspaces Container Support.*
 
@@ -96,7 +96,7 @@ thermal/battery data and the live HTML report: **[docs/benchmark/benchmark-ack.m
 
 ### GitHub Releases (recommended — single flashable zip, no nesting)
 
-Every successful build automatically publishes a **GitHub Release** (`Flavenz-YYYYMMDD`) containing:
+Every successful build automatically publishes a **GitHub Release** — stable builds as `Flavenz-YYYYMMDD`, AutoFDO experiments as a **prerelease** `Flavenz-YYYYMMDD-afdo` — containing:
 
 - `Peridot-Kernel-ACK-…-YYYYMMDD.zip` (ack-full) — raw flashable zip
 - `SHA256SUMS.txt` — checksums to verify integrity before flashing
@@ -133,7 +133,7 @@ This repository includes a fully automated GitHub Actions workflow (`.github/wor
 - Triggered manually via **workflow_dispatch** (Actions → Run workflow).
 - Matrix of **1 job**: `ack-full` (the former `guidix-full` flavor was removed on 2026-09-13 — bootloop on-device).
 - Steps: free disk space → install dependencies → setup Neutron Clang (with antman glibc patch) → clone kernel source per flavor → apply Droidspaces + ThinLTO configs → apply SYSVIPC kABI patch → setup KernelSU Next 5dfc3359 (pershoot dev-susfs, pinned commit) → setup SUSFS v2.3.0 (vendored patch, fail-hard) → build (`Image`, `Image.gz`, `dtbs`) with a **ROM-synced build timestamp** (`rom_build_date` input — keeps `uname -a` aligned with the ROM's build date so integrity checkers like Duck Detector report no drift) → package AnyKernel3 ZIP (vendored `anykernel/` tree + generated `anykernel.sh`) → upload artifact.
-- **Release job**: after the matrix job succeeds, a `release` job publishes the raw flashable zip + `SHA256SUMS.txt` to GitHub Releases (tag `Flavenz-YYYYMMDD`) with full release notes — no zip-in-zip.
+- **Release job**: after the matrix job succeeds, a `release` job publishes the raw flashable zip + `SHA256SUMS.txt` to GitHub Releases (tag `Flavenz-YYYYMMDD`, or `Flavenz-YYYYMMDD-afdo` marked prerelease for AutoFDO runs) with full release notes — no zip-in-zip.
 
 See `docs/kernel-context.md` (or its [English translation](docs/kernel-context.en.md)) for the full technical breakdown and the error-fix log.
 
